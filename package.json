@@ -1,6 +1,6 @@
 {
     "name": "talkpile",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "bin": {
         "talkpile": "./bin/chat.mjs",
         "talkpile-auth": "./bin/source.sh"
