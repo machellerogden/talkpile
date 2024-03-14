@@ -9,10 +9,10 @@ import { tryWithEffects, fx } from 'with-effects';
 import OpenAI from 'openai';
 import chalk from 'chalk';
 import { inspect } from 'node:util';
-import { Config } from '../lib/config.mjs';
+import { Config } from '../lib/config.js';
 import { editAsync } from 'external-editor';
-import { printPrefix, COLOR } from '../lib/print.mjs';
-import { GPT } from '../lib/gpt.mjs';
+import { printPrefix, COLOR } from '../lib/print.js';
+import { GPT } from '../lib/gpt/index.js';
 
 const edit = async (text) => new Promise((resolve, reject) => {
     try {
