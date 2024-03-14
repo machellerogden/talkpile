@@ -4,15 +4,16 @@ import * as readline from 'node:readline/promises';
 import { realpathSync } from 'node:fs';
 import { EOL } from 'node:os';
 import * as url from 'node:url';
-import { stdin, stdout, exit, env, argv } from 'node:process';
+import process, { stdin, stdout, exit, env, argv } from 'node:process';
 import { tryWithEffects, fx } from 'with-effects';
 import OpenAI from 'openai';
 import chalk from 'chalk';
-import { inspect } from 'node:util';
 import { Config } from '../lib/config.js';
 import { editAsync } from 'external-editor';
-import { printPrefix, COLOR } from '../lib/print.js';
+import { printPrefix, COLOR, inspect } from '../lib/print.js';
 import { GPT } from '../lib/gpt/index.js';
+import * as coreKit from '../lib/gpt/kits/core.js';
+import { exitSignal } from '../lib/exit.js';
 
 const edit = async (text) => new Promise((resolve, reject) => {
     try {
@@ -33,7 +34,7 @@ async function* REPL(session) {
         if (input === 'q') {
             break repl;
         } else if (input === 'gpt') {
-            yield* GPT(session);
+            yield* GPT(session, coreKit);
         } else {
             yield fx('send-error', 'Unknown command:', input);
         }
@@ -71,7 +72,7 @@ async function main(env = env, args = argv.slice(2)) {
                 return input;
             },
             'get-editor-input': async (effect, question = printPrefix(session.name ?? 'user')) => {
-                const input = await edit(EOL + EOL + '# Please write your text above.');
+                const input = await edit('');
                 return input;
             },
             'send-chunk': (effect, chunk) => {
@@ -91,7 +92,7 @@ async function main(env = env, args = argv.slice(2)) {
                 return true;
             },
             'unhandled-tool-call': (effect, tool_call) => {
-                console.log(inspect(tool_call, { depth: null, colors: true }));
+                console.log(inspect(tool_call));
                 return true;
             }
         },
@@ -105,10 +106,35 @@ if (stdin.isTTY
     && import.meta.url.startsWith('file:')
     && realpathSync(argv[1]) === url.fileURLToPath(import.meta.url)
 ) {
+
+    function shutdown(exitCode, signal) {
+        console.log(EOL, `Received ${signal}. Shutting down.`);
+        exitCode = exitCode ?? 0;
+        if (typeof exitCode !== 'number') exitCode = 1;
+        queueMicrotask(() => exit(exitCode));
+    }
+
+    exitSignal.addEventListener('abort', () => shutdown(0), { once: true });
+
+    for (const signal of ['SIGHUP', 'SIGTERM', 'SIGINT', 'SIGBREAK', 'SIGABRT', 'SIGQUIT']) {
+        process.on(signal, () => shutdown(0, signal));
+    }
+
+    process.on('uncaughtException', e => {
+        console.error(e.stack);
+        shutdown(1, 'uncaughtException');
+    });
+
+    process.on('unhandledRejection', e => {
+        console.error(e.stack);
+        shutdown(1, 'unhandledRejection');
+    });
+
     try {
+
         await main(env, argv.slice(2));
     } catch (error) {
         console.error(error);
-        exit(1);
+        shutdown(1);
     }
 }
