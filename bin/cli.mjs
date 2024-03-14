@@ -98,4 +98,5 @@ if (stdin.isTTY
         console.error(error);
         shutdown(1);
     }
+
 }
