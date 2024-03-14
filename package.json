@@ -2,8 +2,7 @@
     "name": "talkpile",
     "version": "0.0.2",
     "bin": {
-        "talkpile": "./bin/chat.mjs",
-        "talkpile-auth": "./bin/source.sh"
+        "talkpile": "./bin/cli.mjs"
     },
     "scripts": {
         "dev": "vite dev",
