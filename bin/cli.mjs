@@ -44,39 +44,46 @@ async function main(env = env, args = argv.slice(2)) {
 
     let more = true;
 
+    const effects = {
+        'get-input': async (effect, question = printPrefix(session.name ?? 'user')) => {
+            const input = await rl.question(question);
+            return input;
+        },
+        'get-editor-input': async (effect, question = printPrefix(session.name ?? 'user')) => {
+            const input = await edit('');
+            return input;
+        },
+        'send-chunk': (effect, chunk) => {
+            stdout.write(chunk);
+            return more;
+        },
+        'create-chat-stream': async (effect, request) => {
+            const stream = await openai.chat.completions.create(request);
+            return stream;
+        },
+        'send-log': (effect, ...args) => {
+            console.log(printPrefix('log', COLOR.info) + args.join(' '));
+            return more;
+        },
+        'send-error': (effect, ...args) => {
+            console.error(printPrefix('error', COLOR.error) + args.join(' '));
+            return true;
+        },
+        'send-warning': (effect, ...args) => {
+            console.warn(printPrefix('warning', COLOR.warn) + args.join(' '));
+            return true;
+        },
+        'unhandled-tool-call': (effect, tool_call) => {
+            console.log(inspect(tool_call));
+            return true;
+        }
+        // TODO: core kit fxs
+    };
+
     await tryWithEffects(
         REPL(session),
-        {
-            'get-input': async (effect, question = printPrefix(session.name ?? 'user')) => {
-                const input = await rl.question(question);
-                return input;
-            },
-            'get-editor-input': async (effect, question = printPrefix(session.name ?? 'user')) => {
-                const input = await edit('');
-                return input;
-            },
-            'send-chunk': (effect, chunk) => {
-                stdout.write(chunk);
-                return more;
-            },
-            'send-log': (effect, ...args) => {
-                console.log(printPrefix('log', COLOR.info) + args.join(' '));
-                return more;
-            },
-            'send-error': (effect, ...args) => {
-                console.error(printPrefix('error', COLOR.error) + args.join(' '));
-                return true;
-            },
-            'send-warning': (effect, ...args) => {
-                console.warn(printPrefix('warning', COLOR.warn) + args.join(' '));
-                return true;
-            },
-            'unhandled-tool-call': (effect, tool_call) => {
-                console.log(inspect(tool_call));
-                return true;
-            }
-        },
-        (error) => console.error(error)
+        effects,
+        (error) => console.error(error.stack)
     );
 
     rl.close();
@@ -92,7 +99,7 @@ if (stdin.isTTY
     try {
         await main(env, argv.slice(2));
     } catch (error) {
-        console.error(error);
+        console.error(error.stack);
         shutdown(1, 'error');
     }
 
