@@ -12,6 +12,8 @@ import { editAsync } from 'external-editor';
 import { printPrefix, COLOR, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, shutdown } from '../lib/exit.js';
+import { GPT } from '../lib/gpt/index.js';
+import { copilot } from '../lib/gpt/kits/index.js';
 
 const edit = async (text) => new Promise((resolve, reject) => {
     try {
@@ -38,18 +40,24 @@ async function main(env = env, args = argv.slice(2)) {
     });
 
     const session = {
-        ...config,
+        config,
         openai
     };
 
+    const delegates = {
+        [copilot.name]: GPT(session, copilot)
+    };
+
+    session.delegates = delegates;
+
     let more = true;
 
-    const effects = {
-        'get-input': async (effect, question = printPrefix(session.name ?? 'user')) => {
+    const replFx = {
+        'get-input': async (effect, question = printPrefix(session.config.name ?? 'user')) => {
             const input = await rl.question(question);
             return input;
         },
-        'get-editor-input': async (effect, question = printPrefix(session.name ?? 'user')) => {
+        'get-editor-input': async (effect, question = printPrefix(session.config.name ?? 'user')) => {
             const input = await edit('');
             return input;
         },
@@ -57,9 +65,13 @@ async function main(env = env, args = argv.slice(2)) {
             stdout.write(chunk);
             return more;
         },
-        'create-chat-stream': async (effect, request) => {
-            const stream = await openai.chat.completions.create(request);
-            return stream;
+        'help': (effect, ...args) => {
+            console.log(printPrefix('help', COLOR.success) + `You are in command-mode. Run \`${copilot.name}\` command first, and then ask for help.`);
+            return more;
+        },
+        'request-chat-completion': async (effect, request) => {
+            const response = await openai.chat.completions.create(request);
+            return response;
         },
         'send-log': (effect, ...args) => {
             console.log(printPrefix('log', COLOR.info) + args.join(' '));
@@ -67,22 +79,34 @@ async function main(env = env, args = argv.slice(2)) {
         },
         'send-error': (effect, ...args) => {
             console.error(printPrefix('error', COLOR.error) + args.join(' '));
-            return true;
+            return more;
         },
         'send-warning': (effect, ...args) => {
             console.warn(printPrefix('warning', COLOR.warn) + args.join(' '));
-            return true;
+            return more;
         },
         'unhandled-tool-call': (effect, tool_call) => {
             console.log(inspect(tool_call));
-            return true;
+            return more;
         }
-        // TODO: core kit fxs
     };
+
+    async function handleEffect(effect, ...args) {
+        if (effect in replFx) {
+            const result = await replFx[effect](effect, ...args);
+            if (config.debug) console.log('replFx', { effect, args, result });
+            return result;
+        }
+        if (effect in coreKit.fns) {
+            const result = await coreKit.fns[effect](...args);
+            if (config.debug) console.log('coreKit.fns', { effect, args, result });
+            return result;
+        }
+    }
 
     await tryWithEffects(
         REPL(session),
-        effects,
+        handleEffect,
         (error) => console.error(error.stack)
     );
 
