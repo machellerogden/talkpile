@@ -4,7 +4,7 @@ import * as readline from 'node:readline/promises';
 import { realpathSync } from 'node:fs';
 import { EOL } from 'node:os';
 import * as url from 'node:url';
-import process, { stdin, stdout, exit, env, argv } from 'node:process';
+import process, { stdin, stdout, env, argv } from 'node:process';
 import { tryWithEffects, fx } from 'with-effects';
 import OpenAI from 'openai';
 import { getConfig } from '../lib/config.js';
@@ -39,9 +39,15 @@ async function main(env = env, args = argv.slice(2)) {
         apiKey: config.openaiApiKey
     });
 
+    const context = {
+        username: config.username,
+        working_directory: config.cwd
+    };
+
     const session = {
         config,
-        openai
+        openai,
+        context
     };
 
     const copilot = await copilotKit.load(session, config.copilot);
