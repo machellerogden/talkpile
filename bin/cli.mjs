@@ -97,9 +97,9 @@ async function main(env = env, args = argv.slice(2)) {
             if (config.debug) console.log('replFx', { effect, args, result });
             return result;
         }
-        if (effect in coreKit.fns) {
-            const result = await coreKit.fns[effect](...args);
-            if (config.debug) console.log('coreKit.fns', { effect, args, result });
+        if (effect in copilot.fns) {
+            const result = await copilot.fns[effect](...args);
+            if (config.debug) console.log('copilot.fns', { effect, args, result });
             return result;
         }
     }
