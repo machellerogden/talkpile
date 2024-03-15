@@ -7,11 +7,11 @@ import * as url from 'node:url';
 import process, { stdin, stdout, exit, env, argv } from 'node:process';
 import { tryWithEffects, fx } from 'with-effects';
 import OpenAI from 'openai';
-import { Config } from '../lib/config.js';
+import { getConfig } from '../lib/config.js';
 import { editAsync } from 'external-editor';
 import { printPrefix, COLOR, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
-import { registerShutdown } from '../lib/exit.js';
+import { registerShutdown, shutdown } from '../lib/exit.js';
 
 const edit = async (text) => new Promise((resolve, reject) => {
     try {
@@ -25,11 +25,8 @@ const edit = async (text) => new Promise((resolve, reject) => {
 });
 
 async function main(env = env, args = argv.slice(2)) {
-    const config = Config(env, args);
 
-    if (env.OPENAI_API_KEY == null) {
-        throw Error('Missing OPENAI_API_KEY');
-    }
+    const config = await getConfig(env, args);
 
     const rl = readline.createInterface({
         input: stdin,
@@ -37,7 +34,7 @@ async function main(env = env, args = argv.slice(2)) {
     });
 
     const openai = new OpenAI({
-        apiKey: env.OPENAI_API_KEY
+        apiKey: config.openaiApiKey
     });
 
     const session = {
@@ -96,7 +93,7 @@ if (stdin.isTTY
         await main(env, argv.slice(2));
     } catch (error) {
         console.error(error);
-        shutdown(1);
+        shutdown(1, 'error');
     }
 
 }
