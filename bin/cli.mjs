@@ -13,7 +13,7 @@ import { printPrefix, COLOR, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, shutdown } from '../lib/exit.js';
 import { GPT } from '../lib/gpt/index.js';
-import { copilot } from '../lib/gpt/kits/index.js';
+import * as copilotKit from '../lib/gpt/kits/copilot/index.js';
 
 const edit = async (text) => new Promise((resolve, reject) => {
     try {
@@ -43,6 +43,8 @@ async function main(env = env, args = argv.slice(2)) {
         config,
         openai
     };
+
+    const copilot = await copilotKit.load(session, config.copilot);
 
     const delegates = {
         [copilot.name]: GPT(session, copilot)
