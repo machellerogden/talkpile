@@ -13,7 +13,6 @@ import { printPrefix, COLOR, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, shutdown } from '../lib/exit.js';
 import { GPT } from '../lib/gpt/index.js';
-import * as copilotKit from '../lib/gpt/kits/copilot/index.js';
 
 const edit = async (text) => new Promise((resolve, reject) => {
     try {
@@ -50,6 +49,7 @@ async function main(env = env, args = argv.slice(2)) {
         context
     };
 
+    const copilotKit = await import ('../lib/gpt/kits/copilot/index.js');
     const copilot = await copilotKit.load(session, config.copilot);
 
     const delegates = {
@@ -61,11 +61,12 @@ async function main(env = env, args = argv.slice(2)) {
     let more = true;
 
     const replFx = {
-        'get-input': async (effect, question = printPrefix(session.config.name ?? 'user')) => {
+        'get-input': async (effect, question) => {
+            question = question ?? config.prompt ?? printPrefix(new Date().toLocaleTimeString());
             const input = await rl.question(question);
             return input;
         },
-        'get-editor-input': async (effect, question = printPrefix(session.config.name ?? 'user')) => {
+        'get-editor-input': async (effect) => {
             const input = await edit('');
             return input;
         },
