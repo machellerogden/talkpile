@@ -9,7 +9,7 @@ import { tryWithEffects, fx } from 'with-effects';
 import OpenAI from 'openai';
 import { getConfig } from '../lib/config.js';
 import { editAsync } from 'external-editor';
-import { printPrefix, COLOR, inspect } from '../lib/print.js';
+import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, shutdown } from '../lib/exit.js';
 import { GPT } from '../lib/gpt/index.js';
@@ -43,6 +43,16 @@ async function main(env = env, args = argv.slice(2)) {
         working_directory: config.cwd
     };
 
+    // TODO
+    // config can't hold functions because it's serialized to JSON.
+    // we could save extra settings in a js file module and load
+    // ... or prompt could be config of template string and template variables
+    const prompt = config.prompt = typeof config.prompt === 'function'
+        ? config.prompt
+        : typeof config.prompt === 'string'
+            ? () => config.prompt
+            : printDefaultPrompt;
+
     const session = {
         config,
         openai,
@@ -62,7 +72,7 @@ async function main(env = env, args = argv.slice(2)) {
 
     const replFx = {
         'get-input': async (effect, question) => {
-            question = question ?? config.prompt ?? printPrefix(new Date().toLocaleTimeString());
+            question = question ?? prompt(session);
             const input = await rl.question(question);
             return input;
         },
