@@ -141,7 +141,7 @@ async function main(env = env, args = argv.slice(2)) {
             return more;
         },
         'unhandled-tool-call': (effect, tool_call) => {
-            console.log(inspect(tool_call));
+            console.warn('unhandled-tool-call', inspect(tool_call));
             return more;
         }
     };
