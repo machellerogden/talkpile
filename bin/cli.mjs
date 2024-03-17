@@ -56,16 +56,45 @@ async function main(env = env, args = argv.slice(2)) {
 
     const session = {
         config,
-        openai,
         context
     };
 
-    const copilotKit = await import ('../lib/gpt/kits/copilot/index.js');
-    const copilot = await copilotKit.load(session, config.copilot);
-
-    const delegates = {
-        [copilot.name]: GPT(session, copilot)
+    const defaultKitConfigs = {
+        'copilot': {
+            command: 'gpt',
+            import: '../lib/gpt/kits/copilot/index.js',
+            model: 'gpt-4-0125-preview',
+            temperature: 0.3,
+            frequency_penalty: 0.2,
+            presence_penalty: 0.2
+        }
     };
+
+    const kitConfigs = {
+        ...defaultKitConfigs,
+        ...(config.kits ?? {})
+    };
+
+    const delegates = {};
+
+    for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
+        if (kitConfig.disabled) continue;
+
+        try {
+            if (config.debug) console.log(`Loading Kit:`, kitName, kitConfig);
+            const kitModule = await import(kitConfig.import);
+            const kit = await kitModule.load(session, kitConfig);
+
+            // GPT, I hereby appoint you as my delegate to be called upon when
+            // the command is given. Know of this session and take with you the
+            // tools in this kit. Go forth and do my bidding.
+            delegates[kit.command] = GPT(session, kit);
+
+        } catch (error) {
+            console.error(`Error loading kit: ${kitName}`, error);
+            continue;
+        }
+    }
 
     session.delegates = delegates;
 
@@ -86,7 +115,7 @@ async function main(env = env, args = argv.slice(2)) {
             return more;
         },
         'help': (effect, ...args) => {
-            console.log(printPrefix('help', COLOR.success) + `You are in command-mode. Run \`${copilot.name}\` command first, and then ask for help.`);
+            console.log(printPrefix('help', COLOR.success) + `You are in command-mode. Run \`${copilot.command}\` command first, and then ask for help.`);
             return more;
         },
         'request-chat-completion': async (effect, request) => {
