@@ -39,8 +39,9 @@ async function main(env = env, args = argv.slice(2)) {
     });
 
     const context = {
-        username: config.username,
-        working_directory: config.cwd
+        shell_user: config.shell_user,
+        working_directory: config.cwd,
+        geolocation: config.geolocation
     };
 
     // TODO
