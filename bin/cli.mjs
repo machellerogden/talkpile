@@ -90,13 +90,14 @@ async function main(env = env, args = argv.slice(2)) {
             // GPT, I hereby appoint you as my delegate to be called upon when
             // the command is given. Know of this session and take with you the
             // tools in this kit. Go forth and do my bidding.
-            delegates[kit.command] = async (...args) => {
-                console.log(printPrefix('delegate', COLOR.info) + `Calling ${kit.command} delegate with`, args);
-                return GPT(session, kit);
+            delegates[kit.command] = async (task) => {
+                task = task ?? `This is a request from team member "${kit.command}". User ${config.name} would like to chat. Please greet ${config.name}.`;
+                console.log(printPrefix('delegate', COLOR.info) + `Calling ${kit.command} delegate with task:`, task);
+                return GPT(session, kit, { role: 'system', content: task });
             }
 
         } catch (error) {
-            console.error(`Error loading kit: ${kitName}`, error);
+            console.error(`Error loading kit: ${kitName}`, error.stack);
             continue;
         }
     }
