@@ -75,6 +75,8 @@ async function main(env = env, args = argv.slice(2)) {
         ...(config.kits ?? {})
     };
 
+    session.kits = {};
+
     const delegates = {};
 
     for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
@@ -83,12 +85,15 @@ async function main(env = env, args = argv.slice(2)) {
         try {
             if (config.debug) console.log(`Loading Kit:`, kitName, kitConfig);
             const kitModule = await import(kitConfig.import);
-            const kit = await kitModule.load(session, kitConfig);
+            const kit = session.kits[kitName] = await kitModule.load(session, kitConfig);
 
             // GPT, I hereby appoint you as my delegate to be called upon when
             // the command is given. Know of this session and take with you the
             // tools in this kit. Go forth and do my bidding.
-            delegates[kit.command] = GPT(session, kit);
+            delegates[kit.command] = async (...args) => {
+                console.log(printPrefix('delegate', COLOR.info) + `Calling ${kit.command} delegate with`, args);
+                return GPT(session, kit);
+            }
 
         } catch (error) {
             console.error(`Error loading kit: ${kitName}`, error);
@@ -146,10 +151,14 @@ async function main(env = env, args = argv.slice(2)) {
             if (config.debug) console.log('replFx', { effect, args, result });
             return result;
         }
-        if (effect in copilot.fns) {
-            const result = await copilot.fns[effect](...args);
-            if (config.debug) console.log('copilot.fns', { effect, args, result });
-            return result;
+        for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
+            if (kitConfig.disabled) continue;
+            const kit = session.kits[kitName];
+            if (effect in kit.fns) {
+                const result = await kit.fns[effect](...args);
+                if (config.debug) console.log('kit.fns', { kit: kitName, effect, args, result });
+                return result;
+            }
         }
     }
 
