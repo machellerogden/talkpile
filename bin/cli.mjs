@@ -55,9 +55,12 @@ async function main(env = env, args = argv.slice(2)) {
             ? () => config.prompt
             : printDefaultPrompt;
 
+    const prefixes = [];
+
     const session = {
         config,
-        context
+        context,
+        prefixes
     };
 
     const defaultKitConfigs = {
