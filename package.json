@@ -19,7 +19,8 @@
     },
     "type": "module",
     "exports": {
-        "./gpt/utils": "./lib/gpt/utils.js"
+        "./gpt/utils": "./lib/gpt/utils.js",
+        "./gpt/tools/core": "./lib/gpt/tools/core.js"
     },
     "dependencies": {
         "ansi-colors": "^4.1.3",

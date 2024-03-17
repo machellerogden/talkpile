@@ -13,6 +13,7 @@ import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, shutdown } from '../lib/exit.js';
 import { GPT } from '../lib/gpt/index.js';
+import * as coreFns from '../lib/gpt/tools/core.js';
 
 const edit = async (text) => new Promise((resolve, reject) => {
     try {
@@ -86,6 +87,7 @@ async function main(env = env, args = argv.slice(2)) {
             if (config.debug) console.log(`Loading Kit:`, kitName, kitConfig);
             const kitModule = await import(kitConfig.import);
             const kit = session.kits[kitName] = await kitModule.load(session, kitConfig);
+            kit.fns = Object.assign(kit.fns, coreFns);
 
             // GPT, I hereby appoint you as my delegate to be called upon when
             // the command is given. Know of this session and take with you the
