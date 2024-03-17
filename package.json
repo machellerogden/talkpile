@@ -18,6 +18,9 @@
         "prettier-plugin-svelte": "^3.1.2"
     },
     "type": "module",
+    "exports": {
+        "./gpt/utils": "./lib/gpt/utils.js"
+    },
     "dependencies": {
         "ansi-colors": "^4.1.3",
         "conf": "^12.0.0",
