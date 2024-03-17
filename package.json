@@ -20,7 +20,7 @@
     "type": "module",
     "exports": {
         "./gpt/utils": "./lib/gpt/utils.js",
-        "./gpt/tools/core": "./lib/gpt/tools/core.js"
+        "./gpt/tools": "./lib/gpt/tools/index.js"
     },
     "dependencies": {
         "ansi-colors": "^4.1.3",
