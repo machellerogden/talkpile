@@ -1,5 +1,21 @@
 #!/usr/bin/env node
 
+/**
+ * Copyright 2024 Mac Heller-Ogden
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import * as readline from 'node:readline/promises';
 import { realpathSync } from 'node:fs';
 import { EOL } from 'node:os';
@@ -8,23 +24,12 @@ import process, { stdin, stdout, env, argv } from 'node:process';
 import { tryWithEffects, fx } from 'with-effects';
 import OpenAI from 'openai';
 import { getConfig } from '../lib/config.js';
-import { editAsync } from 'external-editor';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, shutdown } from '../lib/exit.js';
 import { GPT } from '../lib/gpt/index.js';
 import { core } from '../lib/gpt/tools/index.js';
-
-const edit = async (text) => new Promise((resolve, reject) => {
-    try {
-        editAsync(text, (error, value) => {
-            if (error) return reject(error);
-            resolve(value);
-        });
-    } catch (error) {
-        reject(error);
-    }
-});
+import { edit } from '../lib/input.js';
 
 async function main(env = env, args = argv.slice(2)) {
 
@@ -45,22 +50,16 @@ async function main(env = env, args = argv.slice(2)) {
         geolocation: config.geolocation
     };
 
-    // TODO
-    // config can't hold functions because it's serialized to JSON.
-    // we could save extra settings in a js file module and load
-    // ... or prompt could be config of template string and template variables
-    const prompt = config.prompt = typeof config.prompt === 'function'
-        ? config.prompt
-        : typeof config.prompt === 'string'
-            ? () => config.prompt
-            : printDefaultPrompt;
+    // TODO - make configurable
+    const printPrompt = printDefaultPrompt;
 
     const prefixes = [];
 
     const session = {
         config,
         context,
-        prefixes
+        prefixes,
+        printPrompt
     };
 
     const defaultKitConfigs = {
@@ -90,17 +89,30 @@ async function main(env = env, args = argv.slice(2)) {
 
         try {
             if (config.debug) console.log(`Loading Kit:`, kitName, kitConfig);
+
             const kitModule = await import(kitConfig.import);
+
             const kit = session.kits[kitName] = await kitModule.load(session, kitName, kitConfig);
+
             kit.fns = Object.assign(kit.fns, core.fns);
 
             // GPT, I hereby appoint you as my delegate to be called upon when
             // the command is given. Know of this session and take with you the
             // tools in this kit. Go forth and do my bidding.
-            delegates[kit.command] = async (task) => {
-                task = task ?? `This is a request from team member "${kit.command}". User ${config.name} would like to chat. Please greet ${config.name}.`;
-                console.log(prompt(session) + printPrefix('delegate', COLOR.info) + `Calling ${kit.command} delegate with task:`, task);
-                return GPT(session, kit, { role: 'system', content: task });
+            delegates[kit.command] = async (task, from, role) => {
+
+                role = role ?? 'user';
+                from = from ?? 'user';
+                task = task ?? `This is a request from ${from}. ${config.name} would like to chat. Please greet ${config.name}.`;
+
+                const options = {
+                    kit,
+                    generateSummary: role != user
+                };
+                options.message = { role: role == 'user' ? 'user' : 'system', content: task };
+
+                console.log(printPrompt(session) + printPrefix('delegate', COLOR.info) + `Calling ${kit.command} delegate with task:`, task, `Requested by: ${from}.`);
+                return GPT(session, options);
             }
 
         } catch (error) {
@@ -115,11 +127,15 @@ async function main(env = env, args = argv.slice(2)) {
 
     const replFx = {
         'get-input': async (effect, question) => {
-            question = question ?? prompt(session);
+            question = question ?? printPrompt(session);
             const input = await rl.question(question);
             return input;
         },
         'get-editor-input': async (effect) => {
+            const input = await edit('');
+            return input;
+        },
+        'edit-settings': async (effect) => {
             const input = await edit('');
             return input;
         },
@@ -136,19 +152,19 @@ async function main(env = env, args = argv.slice(2)) {
             return response;
         },
         'send-log': (effect, ...args) => {
-            console.log(prompt(session) + printPrefix('log', COLOR.info) + args.join(' '));
+            console.log(printPrompt(session) + printPrefix('log', COLOR.info) + args.join(' '));
             return more;
         },
         'send-error': (effect, ...args) => {
-            console.error(prompt(session) + printPrefix('error', COLOR.error) + args.join(' '));
+            console.error(printPrompt(session) + printPrefix('error', COLOR.error) + args.join(' '));
             return more;
         },
         'send-warning': (effect, ...args) => {
-            console.warn(prompt(session) + printPrefix('warning', COLOR.warn) + args.join(' '));
+            console.warn(printPrompt(session) + printPrefix('warning', COLOR.warn) + args.join(' '));
             return more;
         },
         'unhandled-tool-call': (effect, tool_call) => {
-            console.warn(prompt(session) + printPrefix('error', COLOR.error) + 'unhandled-tool-call', inspect(tool_call));
+            console.warn(printPrompt(session) + printPrefix('error', COLOR.error) + 'unhandled-tool-call', inspect(tool_call));
             return more;
         }
     };

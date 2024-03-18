@@ -1,5 +1,7 @@
 {
     "name": "talkpile",
+    "description": "A CLI tool for generating and managing GPT-3 powered chat logs",
+    "description": "Hackable Agentic REPL",
     "version": "0.0.21",
     "bin": {
         "talkpile": "./bin/cli.mjs"
