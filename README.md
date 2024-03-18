@@ -16,3 +16,7 @@ Ensure `OPENAI_API_KEY` is set, then run:
 ```sh
 talkpile
 ```
+
+# License
+
+Apache-2.0
