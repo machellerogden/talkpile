@@ -29,6 +29,7 @@ import { registerShutdown, shutdown } from '../lib/exit.js';
 import { GPT } from '../lib/gpt/index.js';
 import { core } from '../lib/gpt/tools/index.js';
 import { edit } from '../lib/input.js';
+import enquirer from 'enquirer';
 
 async function main(env = env, args = argv.slice(2)) {
 
@@ -36,7 +37,8 @@ async function main(env = env, args = argv.slice(2)) {
 
     const rl = readline.createInterface({
         input: stdin,
-        output: stdout
+        output: stdout,
+        autoCommit: true
     });
 
     rl.pause();
@@ -65,10 +67,10 @@ async function main(env = env, args = argv.slice(2)) {
     };
 
     const defaultKitConfigs = {
-        'lead': {
+        'core': {
             name: 'Talkpile',
             command: 'talk',
-            import: '../lib/gpt/kits/lead.js',
+            import: '../lib/gpt/kits/core.js',
             model: 'gpt-4-0125-preview',
             temperature: 0.4,
             frequency_penalty: 0.1,
@@ -137,7 +139,6 @@ async function main(env = env, args = argv.slice(2)) {
     const replFx = {
         'get-input': async (effect, question) => {
             question = question ?? printPrompt(session);
-            rl.resume();
             const input = await rl.question(question);
             rl.pause();
             return input;
@@ -154,8 +155,17 @@ async function main(env = env, args = argv.slice(2)) {
             stdout.write(chunk);
             return more;
         },
+        'confirm': async (effect, question, error) => {
+            const confirm = await enquirer.prompt({
+                type: 'confirm',
+                name: 'confirm',
+                message: question
+            });
+            rl.clearLine(0);
+            if (!confirm) return error;
+        },
         'help': () => {
-            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${kitConfigs.lead.command}\` command and ask for help.`);
+            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${kitConfigs.core.command}\` command and ask for help.`);
             return more;
         },
         'request-chat-completion': async (effect, request) => {
@@ -181,24 +191,33 @@ async function main(env = env, args = argv.slice(2)) {
     };
 
     async function handleEffect(effect, ...args) {
-        if (effect in replFx) {
-            const sendLog = !['send-chunk'].includes(effect);
-            const logText = printPrefix('fx', COLOR.info) + ' ' + effect;
-            if (sendLog) replFx['send-log'](effect, logText + ' start');
-            const result = await replFx[effect](effect, ...args);
-            if (sendLog) replFx['send-log'](effect, logText + ' end');
-            return result;
-        }
-        for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
-            if (kitConfig.disabled) continue;
-            const kit = session.kits[kitName];
-            if (effect in kit.fns) {
-                const logText = printPrefix(kitName, COLOR.info) + ' ' + effect;
-                await replFx['send-log'](effect, logText + ' start');
-                const result = await kit.fns[effect](...args);
-                await replFx['send-log'](effect, logText + ' end');
+        try {
+            if (effect in replFx) {
+                const sendLog = !['send-chunk','get-input'].includes(effect);
+                const logText = printPrefix('fx', COLOR.info) + ' ' + effect;
+                if (sendLog) replFx['send-log'](effect, logText + ' start');
+                const result = await replFx[effect](effect, ...args);
+                if (sendLog) replFx['send-log'](effect, logText + ' end');
                 return result;
             }
+            for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
+                if (kitConfig.disabled) continue;
+                const kit = session.kits[kitName];
+                if (effect in kit.fns) {
+                    const logText = printPrefix(kitName, COLOR.info) + ' ' + effect;
+                    await replFx['send-log'](effect, logText + ' start');
+                    const fn = kit.fns[effect];
+                    if (fn?.confirm) {
+                        const error = await replFx.confirm(effect, `Are you sure you want to run ${kitName}.${effect} with ${JSON.stringify(args[1])}?`, `Aborted ${kitName}.${effect}.`);
+                        if (error) return error;
+                    }
+                    const result = await kit.fns[effect](...args);
+                    await replFx['send-log'](effect, logText + ' end');
+                    return result;
+                }
+            }
+        } catch (error) {
+            return replFx['send-error'](effect, error.stack);
         }
     }
 
