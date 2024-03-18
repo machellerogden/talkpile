@@ -67,10 +67,10 @@ async function main(env = env, args = argv.slice(2)) {
     };
 
     const defaultKitConfigs = {
-        'core': {
+        'main': {
             name: 'Talkpile',
             command: 'talk',
-            import: '../lib/gpt/kits/core.js',
+            import: '../lib/gpt/kits/main.js',
             model: 'gpt-4-0125-preview',
             temperature: 0.4,
             frequency_penalty: 0.1,
@@ -165,7 +165,7 @@ async function main(env = env, args = argv.slice(2)) {
             if (!confirm) return error;
         },
         'help': () => {
-            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${kitConfigs.core.command}\` command and ask for help.`);
+            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${kitConfigs.main.command}\` command and ask for help.`);
             return more;
         },
         'request-chat-completion': async (effect, request) => {
