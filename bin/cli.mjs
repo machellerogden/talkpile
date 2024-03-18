@@ -107,11 +107,18 @@ async function main(env = env, args = argv.slice(2)) {
 
                 const options = {
                     kit,
-                    generateSummary: role != user
+                    generateSummary: role != 'user'
                 };
                 options.message = { role: role == 'user' ? 'user' : 'system', content: task };
 
-                console.log(printPrompt(session) + printPrefix('delegate', COLOR.info) + `Calling ${kit.command} delegate with task:`, task, `Requested by: ${from}.`);
+                console.log(
+                    printPrompt(session) +
+                    printPrefix('delegate', COLOR.info) +
+                    `Calling ${kit.command} delegate. ` +
+                    (task ? `Task: ` + task : '') +
+                    `Requested by: ${from}.`
+                );
+
                 return GPT(session, options);
             }
 
