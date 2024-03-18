@@ -18,10 +18,9 @@
 
 import * as readline from 'node:readline/promises';
 import { realpathSync } from 'node:fs';
-import { EOL } from 'node:os';
 import * as url from 'node:url';
-import process, { stdin, stdout, env, argv } from 'node:process';
-import { tryWithEffects, fx } from 'with-effects';
+import { stdin, stdout, env, argv } from 'node:process';
+import { tryWithEffects } from 'with-effects';
 import OpenAI from 'openai';
 import { getConfig } from '../lib/config.js';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
@@ -39,6 +38,8 @@ async function main(env = env, args = argv.slice(2)) {
         input: stdin,
         output: stdout
     });
+
+    rl.pause();
 
     const openai = new OpenAI({
         apiKey: config.openaiApiKey
@@ -59,7 +60,8 @@ async function main(env = env, args = argv.slice(2)) {
         config,
         context,
         prefixes,
-        printPrompt
+        printPrompt,
+        rl
     };
 
     const defaultKitConfigs = {
@@ -114,7 +116,7 @@ async function main(env = env, args = argv.slice(2)) {
                 console.log(
                     printPrompt(session) +
                     printPrefix('delegate', COLOR.info) +
-                    `Calling ${kit.command} delegate. ` +
+                    ` Calling ${kit.command} delegate. ` +
                     (task ? `Task: ` + task : '') +
                     `Requested by: ${from}.`
                 );
@@ -135,14 +137,16 @@ async function main(env = env, args = argv.slice(2)) {
     const replFx = {
         'get-input': async (effect, question) => {
             question = question ?? printPrompt(session);
+            rl.resume();
             const input = await rl.question(question);
+            rl.pause();
             return input;
         },
-        'get-editor-input': async (effect) => {
+        'get-editor-input': async () => {
             const input = await edit('');
             return input;
         },
-        'edit-settings': async (effect) => {
+        'edit-settings': async () => {
             const input = await edit('');
             return input;
         },
@@ -150,8 +154,8 @@ async function main(env = env, args = argv.slice(2)) {
             stdout.write(chunk);
             return more;
         },
-        'help': (effect, ...args) => {
-            console.log(printPrefix('help', COLOR.success) + `You are in command-mode. Run \`${kitConfigs.lead.command}\` command and ask for help.`);
+        'help': () => {
+            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${kitConfigs.lead.command}\` command and ask for help.`);
             return more;
         },
         'request-chat-completion': async (effect, request) => {
@@ -159,35 +163,40 @@ async function main(env = env, args = argv.slice(2)) {
             return response;
         },
         'send-log': (effect, ...args) => {
-            console.log(printPrompt(session) + printPrefix('log', COLOR.info) + args.join(' '));
+            console.log(printPrompt(session) + args.join(' '));
             return more;
         },
         'send-error': (effect, ...args) => {
-            console.error(printPrompt(session) + printPrefix('error', COLOR.error) + args.join(' '));
+            console.error(printPrompt(session) + printPrefix('error', COLOR.error) + ' ' + args.join(' '));
             return more;
         },
         'send-warning': (effect, ...args) => {
-            console.warn(printPrompt(session) + printPrefix('warning', COLOR.warn) + args.join(' '));
+            console.warn(printPrompt(session) + printPrefix('warning', COLOR.warn) + ' ' + args.join(' '));
             return more;
         },
         'unhandled-tool-call': (effect, tool_call) => {
-            console.warn(printPrompt(session) + printPrefix('error', COLOR.error) + 'unhandled-tool-call', inspect(tool_call));
+            console.warn(printPrompt(session) + printPrefix('error', COLOR.error) + ' ' + 'unhandled-tool-call', inspect(tool_call));
             return more;
         }
     };
 
     async function handleEffect(effect, ...args) {
         if (effect in replFx) {
+            const sendLog = !['send-chunk'].includes(effect);
+            const logText = printPrefix('fx', COLOR.info) + ' ' + effect;
+            if (sendLog) replFx['send-log'](effect, logText + ' start');
             const result = await replFx[effect](effect, ...args);
-            if (config.debug) console.log('replFx', { effect, args, result });
+            if (sendLog) replFx['send-log'](effect, logText + ' end');
             return result;
         }
         for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
             if (kitConfig.disabled) continue;
             const kit = session.kits[kitName];
             if (effect in kit.fns) {
+                const logText = printPrefix(kitName, COLOR.info) + ' ' + effect;
+                await replFx['send-log'](effect, logText + ' start');
                 const result = await kit.fns[effect](...args);
-                if (config.debug) console.log('kit.fns', { kit: kitName, effect, args, result });
+                await replFx['send-log'](effect, logText + ' end');
                 return result;
             }
         }
@@ -209,11 +218,13 @@ if (stdin.isTTY
 
     registerShutdown();
 
-    try {
-        await main(env, argv.slice(2));
-    } catch (error) {
-        console.error(error.stack);
-        shutdown(1, 'error');
-    }
+    (async () => {
+        try {
+            await main(env, argv.slice(2));
+        } catch (error) {
+            console.error(error.stack);
+            shutdown(1, 'error');
+        }
+    })();
 
 }
