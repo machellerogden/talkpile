@@ -1,6 +1,6 @@
 {
     "name": "talkpile",
-    "version": "0.0.20",
+    "version": "0.0.21",
     "bin": {
         "talkpile": "./bin/cli.mjs"
     },
