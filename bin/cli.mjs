@@ -64,12 +64,13 @@ async function main(env = env, args = argv.slice(2)) {
     };
 
     const defaultKitConfigs = {
-        'copilot': {
-            command: 'gpt',
-            import: '../lib/gpt/kits/copilot/index.js',
+        'lead': {
+            name: 'Talkpile',
+            command: 'talk',
+            import: '../lib/gpt/kits/lead.js',
             model: 'gpt-4-0125-preview',
-            temperature: 0.3,
-            frequency_penalty: 0.2,
+            temperature: 0.4,
+            frequency_penalty: 0.1,
             presence_penalty: 0.2
         }
     };
@@ -83,13 +84,14 @@ async function main(env = env, args = argv.slice(2)) {
 
     const delegates = {};
 
+    // TODO rip this out into a function
     for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
         if (kitConfig.disabled) continue;
 
         try {
             if (config.debug) console.log(`Loading Kit:`, kitName, kitConfig);
             const kitModule = await import(kitConfig.import);
-            const kit = session.kits[kitName] = await kitModule.load(session, kitConfig);
+            const kit = session.kits[kitName] = await kitModule.load(session, kitName, kitConfig);
             kit.fns = Object.assign(kit.fns, core.fns);
 
             // GPT, I hereby appoint you as my delegate to be called upon when
@@ -97,7 +99,7 @@ async function main(env = env, args = argv.slice(2)) {
             // tools in this kit. Go forth and do my bidding.
             delegates[kit.command] = async (task) => {
                 task = task ?? `This is a request from team member "${kit.command}". User ${config.name} would like to chat. Please greet ${config.name}.`;
-                console.log(printPrefix('delegate', COLOR.info) + `Calling ${kit.command} delegate with task:`, task);
+                console.log(prompt(session) + printPrefix('delegate', COLOR.info) + `Calling ${kit.command} delegate with task:`, task);
                 return GPT(session, kit, { role: 'system', content: task });
             }
 
@@ -126,7 +128,7 @@ async function main(env = env, args = argv.slice(2)) {
             return more;
         },
         'help': (effect, ...args) => {
-            console.log(printPrefix('help', COLOR.success) + `You are in command-mode. Run \`${copilot.command}\` command first, and then ask for help.`);
+            console.log(printPrefix('help', COLOR.success) + `You are in command-mode. Run \`${kitConfigs.lead.command}\` command and ask for help.`);
             return more;
         },
         'request-chat-completion': async (effect, request) => {
@@ -134,19 +136,19 @@ async function main(env = env, args = argv.slice(2)) {
             return response;
         },
         'send-log': (effect, ...args) => {
-            console.log(printPrefix('log', COLOR.info) + args.join(' '));
+            console.log(prompt(session) + printPrefix('log', COLOR.info) + args.join(' '));
             return more;
         },
         'send-error': (effect, ...args) => {
-            console.error(printPrefix('error', COLOR.error) + args.join(' '));
+            console.error(prompt(session) + printPrefix('error', COLOR.error) + args.join(' '));
             return more;
         },
         'send-warning': (effect, ...args) => {
-            console.warn(printPrefix('warning', COLOR.warn) + args.join(' '));
+            console.warn(prompt(session) + printPrefix('warning', COLOR.warn) + args.join(' '));
             return more;
         },
         'unhandled-tool-call': (effect, tool_call) => {
-            console.warn('unhandled-tool-call', inspect(tool_call));
+            console.warn(prompt(session) + printPrefix('error', COLOR.error) + 'unhandled-tool-call', inspect(tool_call));
             return more;
         }
     };
