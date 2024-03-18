@@ -105,9 +105,9 @@ async function main(env = env, args = argv.slice(2)) {
             // tools in this kit. Go forth and do my bidding.
             delegates[kit.command] = async (task, from, role) => {
 
-                role = role ?? 'user';
-                from = from ?? 'user';
-                task = task ?? `This is a request from ${from}. ${config.name} would like to chat. Please greet ${config.name}.`;
+                role = role || 'user';
+                from = from || 'user';
+                task = task || `This is a request from ${from}. ${config.name} would like to chat. Please greet ${config.name}.`;
 
                 const options = {
                     kit,
@@ -194,7 +194,7 @@ async function main(env = env, args = argv.slice(2)) {
         try {
             if (effect in replFx) {
                 const sendLog = !['send-chunk','get-input'].includes(effect);
-                const logText = printPrefix('fx', COLOR.info) + ' ' + effect;
+                const logText = printPrefix('repl.fx', COLOR.info) + ' ' + effect;
                 if (sendLog) replFx['send-log'](effect, logText + ' start');
                 const result = await replFx[effect](effect, ...args);
                 if (sendLog) replFx['send-log'](effect, logText + ' end');
@@ -204,7 +204,7 @@ async function main(env = env, args = argv.slice(2)) {
                 if (kitConfig.disabled) continue;
                 const kit = session.kits[kitName];
                 if (effect in kit.fns) {
-                    const logText = printPrefix(kitName, COLOR.info) + ' ' + effect;
+                    const logText = printPrefix(kitName + '.' + effect, COLOR.info);
                     await replFx['send-log'](effect, logText + ' start');
                     const fn = kit.fns[effect];
                     if (fn?.confirm) {
