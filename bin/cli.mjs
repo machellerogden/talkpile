@@ -44,13 +44,15 @@ async function main(env = env, args = argv.slice(2)) {
     rl.pause();
 
     const openai = new OpenAI({
-        apiKey: config.openaiApiKey
+        apiKey: config.OPENAI_API_KEY
     });
 
     const context = {
         shell_user: config.shell_user,
+        user: config.user,
         working_directory: config.cwd,
-        geolocation: config.geolocation
+        geolocation: config.geolocation,
+        settings_path: config.settings_path
     };
 
     // TODO - make configurable
@@ -66,30 +68,13 @@ async function main(env = env, args = argv.slice(2)) {
         rl
     };
 
-    const defaultKitConfigs = {
-        'talk': {
-            name: 'Talkpile',
-            command: 'talk',
-            import: '../lib/gpt/kits/talk.js',
-            model: 'gpt-4-0125-preview',
-            temperature: 0.4,
-            frequency_penalty: 0.1,
-            presence_penalty: 0.2
-        }
-    };
-
-    const kitConfigs = {
-        ...defaultKitConfigs,
-        ...(config.kits ?? {})
-    };
-
     session.kits = {};
 
     const delegates = {};
 
     // Below creates the delegation handlers for each kit.
     // TODO - factor this out
-    for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
+    for (const [ kitName, kitConfig ] of Object.entries(config.kits)) {
         if (kitConfig.disabled) continue;
 
         try {
@@ -116,13 +101,15 @@ async function main(env = env, args = argv.slice(2)) {
                 };
                 options.message = { role: role == 'user' ? 'user' : 'system', content: task };
 
-                console.log(
-                    printPrompt(session) +
-                    printPrefix('delegate', COLOR.info) +
-                    ` Calling ${kit.command} delegate. ` +
-                    (task ? `Task: ` + task : '') +
-                    `Requested by: ${from}.`
-                );
+                if (!config.quiet) {
+                    console.log(
+                        printPrompt(session) +
+                        printPrefix('delegate', COLOR.info) +
+                        ` Calling ${kit.command} delegate. ` +
+                        (task ? `Task: ` + task : '') +
+                        `Requested by: ${from}.`
+                    );
+                }
 
                 return GPT(session, options);
             }
@@ -166,7 +153,7 @@ async function main(env = env, args = argv.slice(2)) {
             if (!confirm) return error;
         },
         'help': () => {
-            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${kitConfigs.talk.command}\` command and ask for help.`);
+            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${config.kits.talk.command}\` command and ask for help.`);
             return more;
         },
         'request-chat-completion': async (effect, request) => {
@@ -201,7 +188,7 @@ async function main(env = env, args = argv.slice(2)) {
                 if (sendLog) replFx['send-log'](effect, logText + ' end');
                 return result;
             }
-            for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
+            for (const [ kitName, kitConfig ] of Object.entries(config.kits)) {
                 if (kitConfig.disabled) continue;
                 const kit = session.kits[kitName];
                 if (effect in kit.fns) {
