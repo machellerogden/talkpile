@@ -67,10 +67,10 @@ async function main(env = env, args = argv.slice(2)) {
     };
 
     const defaultKitConfigs = {
-        'main': {
+        'talk': {
             name: 'Talkpile',
             command: 'talk',
-            import: '../lib/gpt/kits/main.js',
+            import: '../lib/gpt/kits/talk.js',
             model: 'gpt-4-0125-preview',
             temperature: 0.4,
             frequency_penalty: 0.1,
@@ -87,7 +87,8 @@ async function main(env = env, args = argv.slice(2)) {
 
     const delegates = {};
 
-    // TODO rip this out into a function
+    // Below creates the delegation handlers for each kit.
+    // TODO - factor this out
     for (const [ kitName, kitConfig ] of Object.entries(kitConfigs)) {
         if (kitConfig.disabled) continue;
 
@@ -165,7 +166,7 @@ async function main(env = env, args = argv.slice(2)) {
             if (!confirm) return error;
         },
         'help': () => {
-            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${kitConfigs.main.command}\` command and ask for help.`);
+            console.log(printPrompt(session) + printPrefix('help', COLOR.success) + ` You are in command-mode. Run \`${kitConfigs.talk.command}\` command and ask for help.`);
             return more;
         },
         'request-chat-completion': async (effect, request) => {
@@ -193,7 +194,7 @@ async function main(env = env, args = argv.slice(2)) {
     async function handleEffect(effect, ...args) {
         try {
             if (effect in replFx) {
-                const sendLog = !['send-chunk','get-input'].includes(effect);
+                const sendLog = !(['send-chunk','get-input'].includes(effect) || config.quiet);
                 const logText = printPrefix('repl.fx', COLOR.info) + ' ' + effect;
                 if (sendLog) replFx['send-log'](effect, logText + ' start');
                 const result = await replFx[effect](effect, ...args);
