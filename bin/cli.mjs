@@ -64,8 +64,7 @@ async function main(env = env, args = argv.slice(2)) {
         config,
         context,
         prefixes,
-        printPrompt,
-        rl
+        printPrompt
     };
 
     session.kits = {};
@@ -107,7 +106,7 @@ async function main(env = env, args = argv.slice(2)) {
                         printPrefix('delegate', COLOR.info) +
                         ` Calling ${kit.command} delegate. ` +
                         (task ? `Task: ` + task : '') +
-                        `Requested by: ${from}.`
+                        ` Requested by: ${from}.`
                     );
                 }
 
@@ -132,10 +131,6 @@ async function main(env = env, args = argv.slice(2)) {
             return input;
         },
         'get-editor-input': async () => {
-            const input = await edit('');
-            return input;
-        },
-        'edit-settings': async () => {
             const input = await edit('');
             return input;
         },
