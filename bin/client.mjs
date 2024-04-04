@@ -19,7 +19,7 @@
 import net from 'node:net';
 import { EOL } from 'node:os';
 import { realpathSync } from 'node:fs';
-import { argv, env, stdin, stdout } from 'node:process';
+import { argv, env, stdin, stdout, cwd } from 'node:process';
 import * as url from 'node:url';
 import * as readline from 'node:readline';
 import { editAsync } from 'external-editor';
@@ -85,6 +85,7 @@ async function main(env = env, args = argv.slice(2)) {
     let incoming = '';
     let depth = 0;
     let inQuote = false;
+
     socket.on('data', async buf => {
 
         const str = buf.toString();
@@ -109,6 +110,11 @@ async function main(env = env, args = argv.slice(2)) {
             if (depth == 0 && !inQuote) {
                 const data = tryParseData(incoming);
 
+                if (data?.message == 'cwd?') {
+                    socket.write(`${JSON.stringify({ message: cwd() })}\r\n`);
+                    incoming = '';
+                    continue;
+                }
 
                 if (data?.chunk && data?.message) {
                     stdout.write(data.message);

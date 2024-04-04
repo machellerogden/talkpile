@@ -3,7 +3,9 @@
     "description": "Hackable Agentic REPL",
     "version": "0.0.27",
     "bin": {
-        "talkpile": "./bin/cli.mjs"
+        "talkpile": "./bin/cli.mjs",
+        "talkpile-daemon": "./bin/daemon.mjs",
+        "talkpile-client": "./bin/client.mjs"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",

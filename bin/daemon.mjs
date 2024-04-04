@@ -59,6 +59,8 @@ async function main(env = env, args = argv.slice(2)) {
 
                 clients.set(clientId, { connection });
 
+                const cwd = await prompt(connection, 'cwd?');
+
                 const openai = new OpenAI({
                     apiKey: config.OPENAI_API_KEY
                 });
@@ -66,7 +68,7 @@ async function main(env = env, args = argv.slice(2)) {
                 const context = {
                     shell_user: config.shell_user,
                     user: config.user,
-                    working_directory: config.cwd,
+                    working_directory: cwd ?? config.cwd,
                     geolocation: config.geolocation,
                     settings_path: config.settings_path
                 };
