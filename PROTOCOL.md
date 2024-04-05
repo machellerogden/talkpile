@@ -1,12 +1,14 @@
 # Protocol Specification
 
-JSON-based protocol for interacting with a Node.js-hosted REPL server.
+A JSON-based protocol for interacting with Talkpile REPL Daemon.
 
-The protocol defines message formats, operations, and error handling mechanisms to facilitate communication between clients and the REPL server.
+The protocol defines message formats, operations, and error handling mechanisms to facilitate communication between Talkpile clients and the Talkpile REPL server.
 
 ## Message Format
 
-Messages exchanged between the client and the server are in JSON format. Each message consists of a JSON object with the following fields:
+Messages exchanged between the client and the server are in JSON format.
+
+Proposal is to make each message consists of a JSON object with the following fields:
 
 - op (operation): A string indicating the type of operation to be performed.
     - Possible values: `eval`, `complete`, `describe`.
@@ -16,3 +18,5 @@ Messages exchanged between the client and the server are in JSON format. Each me
 ## Security Considerations
 
 Authentication, authorization, and encryption tbd.
+
+- SSH PoC worked well, but we need to consider other options
