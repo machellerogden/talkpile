@@ -24,7 +24,7 @@ import * as url from 'node:url';
 import { stdin, stdout, env, argv, exit } from 'node:process';
 import { tryWithEffects } from 'with-effects';
 import OpenAI from 'openai';
-import { getConfig } from '../lib/config.js';
+import { getDaemonConfig } from '../lib/config.js';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, exitSignal } from '../lib/exit.js';
@@ -32,14 +32,14 @@ import { GPT } from '../lib/gpt/index.js';
 import { core } from '../lib/gpt/tools/index.js';
 import { edit } from '../lib/input.js';
 import enquirer from 'enquirer';
-import { send, sendChunk, sendLog, prompt, editor } from '../lib/connection.js';
+import { send, sendChunk, sendLog, sendContextRequest, prompt, editor } from '../lib/connection.js';
 import { nanoid } from 'nanoid';
 
 const clients = new Map();
 
 async function main(env = env, args = argv.slice(2)) {
 
-    const config = await getConfig(env, args);
+    const config = await getDaemonConfig(env, args);
 
     // TODO - make configurable
     const printPrompt = printDefaultPrompt;
@@ -59,16 +59,15 @@ async function main(env = env, args = argv.slice(2)) {
 
                 clients.set(clientId, { connection });
 
-                const cwd = await prompt(connection, 'cwd?');
 
                 const openai = new OpenAI({
                     apiKey: config.OPENAI_API_KEY
                 });
 
                 const context = {
-                    shell_user: config.shell_user,
-                    user: config.user,
-                    working_directory: cwd ?? config.cwd,
+                    user: await prompt(connection, 'user', sendContextRequest) ?? config.user,
+                    shell_user: await prompt(connection, 'shell_user', sendContextRequest) ?? config.shell_user,
+                    working_directory: await prompt(connection, 'working_directory', sendContextRequest) ?? config.cwd,
                     geolocation: config.geolocation,
                     settings_path: config.settings_path
                 };

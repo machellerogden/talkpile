@@ -22,7 +22,7 @@ import * as url from 'node:url';
 import { stdin, stdout, env, argv } from 'node:process';
 import { tryWithEffects } from 'with-effects';
 import OpenAI from 'openai';
-import { getConfig } from '../lib/config.js';
+import { getDaemonConfig } from '../lib/config.js';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, shutdown } from '../lib/exit.js';
@@ -33,7 +33,7 @@ import enquirer from 'enquirer';
 
 async function main(env = env, args = argv.slice(2)) {
 
-    const config = await getConfig(env, args);
+    const config = await getDaemonConfig(env, args);
 
     const rl = readline.createInterface({
         input: stdin,

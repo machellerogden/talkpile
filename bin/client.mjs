@@ -17,12 +17,13 @@
  */
 
 import net from 'node:net';
-import { EOL } from 'node:os';
+import os from 'node:os';
 import { realpathSync } from 'node:fs';
 import { argv, env, stdin, stdout, cwd } from 'node:process';
 import * as url from 'node:url';
 import * as readline from 'node:readline';
 import { editAsync } from 'external-editor';
+import { getClientConfig } from '../lib/config.js';
 
 const exitController = new AbortController();
 const exitSignal = exitController.signal;
@@ -48,11 +49,7 @@ function tryParseData(json) {
 
 async function main(env = env, args = argv.slice(2)) {
 
-    // TODO
-    const config = {
-        host: '127.0.0.1',
-        port: 9393
-    };
+    const config = await getClientConfig(env, args);
 
     stdin.setRawMode(true);
 
@@ -61,7 +58,7 @@ async function main(env = env, args = argv.slice(2)) {
         output: stdout,
         terminal: true,
         crlfDelay: Infinity,
-        prompt: EOL
+        prompt: os.EOL
     });
 
     if (config.debug) {
@@ -110,8 +107,27 @@ async function main(env = env, args = argv.slice(2)) {
             if (depth == 0 && !inQuote) {
                 const data = tryParseData(incoming);
 
-                if (data?.message == 'cwd?') {
-                    socket.write(`${JSON.stringify({ message: cwd() })}\r\n`);
+                if (data?.contextRequest) {
+                    let message;
+
+                    if (data?.message) {
+                        if (data.message == 'working_directory') {
+                            message = cwd();
+                        } else if (data.message == 'shell_user') {
+                            message = os.userInfo().username;
+                        } else if (data.message in config) {
+                            if (data.message in config) {
+                                message = config[data.message];
+                            } else {
+                                stdout.write(`${data.message ?? ''}\r\n`);
+                                rl.prompt(true);
+                                incoming = '';
+                                continue;
+                            }
+                        }
+                    }
+
+                    socket.write(`${JSON.stringify({ message })}\r\n`);
                     incoming = '';
                     continue;
                 }
