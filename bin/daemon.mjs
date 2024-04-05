@@ -272,13 +272,12 @@ async function packageDelegates(session) {
     // Below creates the delegation handlers for each kit.
     for (const [ kitName, kitConfig ] of Object.entries(config.kits)) {
         if (kitConfig.disabled) continue;
-
         try {
             if (config.debug) console.log(`Loading Kit:`, kitName, kitConfig);
 
             const kitModule = await import(kitConfig.import);
 
-            const kit = session.kits[kitName] = await kitModule.load(session, kitName, kitConfig);
+            const kit = session.kits[kitName] = await kitModule.load(session, kitConfig);
 
             kit.fns = Object.assign(kit.fns, core.fns);
 
