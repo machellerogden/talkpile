@@ -28,8 +28,7 @@ import { getDaemonConfig } from '../lib/config.js';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, exitSignal } from '../lib/exit.js';
-import { GPT } from '../lib/gpt/index.js';
-import { core } from '../lib/gpt/tools/index.js';
+import { packageDelegates } from '../lib/gpt/index.js';
 import { edit } from '../lib/input.js';
 import enquirer from 'enquirer';
 import { send, sendChunk, sendLog, sendContextRequest, prompt, editor } from '../lib/connection.js';
@@ -113,7 +112,7 @@ async function main(env = env, args = argv.slice(2)) {
                         const message = [
                             printPrompt(session),
                             printPrefix('help', COLOR.success),
-                            `You are in command-mode. Run \`${config.kits.talk.command}\` command and ask for help.`
+                            `You are in command-mode. Run \`${config.kits.talkpile.command}\` command and ask for help.`
                         ].join(' ');
                         console.log(message);
                         return send(session.connection, message);
@@ -263,55 +262,4 @@ if (stdin.isTTY
         }
     })();
 
-}
-
-async function packageDelegates(session) {
-    const { config, printPrompt } = session;
-    const delegates = {};
-    // Below creates the delegation handlers for each kit.
-    for (const [ kitName, kitConfig ] of Object.entries(config.kits)) {
-        if (kitConfig.disabled) continue;
-        try {
-            if (config.debug) console.log(`Loading Kit:`, kitName, kitConfig);
-
-            const kitModule = await import(kitConfig.import);
-
-            const kit = session.kits[kitName] = await kitModule.load(session, kitConfig);
-
-            kit.fns = Object.assign(kit.fns, core.fns);
-
-            // GPT, I hereby appoint you as my delegate to be called upon when
-            // the command is given. Know of this session and take with you the
-            // tools in this kit. Go forth and do my bidding.
-            delegates[kit.command] = async (task, from, role) => {
-
-                role = role || 'user';
-                from = from || 'user';
-                task = task || `This is a request from ${from}. ${config.name} would like to chat. Please greet ${config.name}.`;
-
-                const options = {
-                    kit,
-                    generateSummary: role != 'user'
-                };
-                options.message = { role: role == 'user' ? 'user' : 'system', content: task };
-
-                if (!config.quiet) {
-                    console.log([
-                        printPrompt(session),
-                        printPrefix('delegate', COLOR.info),
-                        `Calling ${kit.command} delegate. `,
-                        (task ? `Task: ` + task : ''),
-                        `Requested by: ${from}.`
-                    ].join(' '));
-                }
-
-                return GPT(session, options);
-            }
-
-        } catch (error) {
-            console.error(`Error loading kit: ${kitName}`, error.stack);
-            continue;
-        }
-    }
-    return delegates;
 }

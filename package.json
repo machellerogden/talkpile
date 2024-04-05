@@ -21,6 +21,7 @@
     },
     "type": "module",
     "exports": {
+        "./gpt": "./lib/gpt/index.js",
         "./gpt/templates": "./lib/gpt/templates/index.js",
         "./gpt/tools": "./lib/gpt/tools/index.js",
         "./gpt/utils": "./lib/gpt/utils.js"
