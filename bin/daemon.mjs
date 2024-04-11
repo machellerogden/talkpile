@@ -31,7 +31,7 @@ import { registerShutdown, exitSignal } from '../lib/exit.js';
 import { packageDelegates } from '../lib/gpt/index.js';
 import { edit } from '../lib/input.js';
 import enquirer from 'enquirer';
-import { send, sendChunk, sendLog, sendContextRequest, prompt, editor } from '../lib/connection.js';
+import { send, sendChunk, sendLog, sendQuietLog, sendContextRequest, prompt, editor } from '../lib/connection.js';
 import { nanoid } from 'nanoid';
 
 const clients = new Map();
@@ -132,6 +132,14 @@ async function main(env = env, args = argv.slice(2)) {
                         console.log(message);
                         return sendLog(session.connection, message);
                     },
+                    'send-quiet-log': (session, ...args) => {
+                        const message = [
+                            printPrompt(session),
+                            ...args
+                        ].join(' ');
+                        console.log(message);
+                        return sendQuietLog(session.connection, message);
+                    },
                     'send-error': (session, ...args) => {
                         const message = [
                             printPrompt(session),
@@ -156,11 +164,12 @@ async function main(env = env, args = argv.slice(2)) {
                 async function handleEffect(effect, ...args) {
                     try {
                         if (effect in replFx) {
-                            const sendLog = !(['send-chunk','get-input'].includes(effect) || config.quiet);
+                            const shouldSend = !(['send-chunk','get-input'].includes(effect) || config.quiet);
+                            const logEffect = ['request-chat-completion'].includes(effect) ? 'send-quiet-log' : 'send-log';
                             const logText = printPrefix('repl.fx', COLOR.info) + ' ' + effect;
-                            if (sendLog) replFx['send-log'](session, logText + ' start');
+                            if (shouldSend) replFx[logEffect](session, logText + ' start');
                             const result = await replFx[effect](session, ...args);
-                            if (sendLog) replFx['send-log'](session, logText + ' end');
+                            if (shouldSend) replFx[logEffect](session, logText + ' end');
                             return result;
                         }
                         for (const [ kitName, kitConfig ] of Object.entries(config.kits)) {

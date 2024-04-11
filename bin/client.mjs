@@ -136,6 +136,7 @@ async function main(env = env, args = argv.slice(2)) {
                     stdout.write(data.message);
                 } else if (
                     data?.message?.trim().length
+                    && !data?.quiet
                     && !(data?.log
                     && config.quiet)
                 ) {
