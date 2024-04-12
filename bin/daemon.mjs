@@ -31,7 +31,7 @@ import { registerShutdown, exitSignal } from '../lib/exit.js';
 import { packageDelegates } from '../lib/gpt/index.js';
 import { edit } from '../lib/input.js';
 import enquirer from 'enquirer';
-import { send, sendChunk, sendLog, sendQuietLog, sendContextRequest, prompt, editor } from '../lib/connection.js';
+import { send, sendChunk, sendLog, sendQuietLog, sendSystemRequest, sendContextRequest, prompt, editor } from '../lib/connection.js';
 import { nanoid } from 'nanoid';
 
 const clients = new Map();
@@ -57,7 +57,6 @@ async function main(env = env, args = argv.slice(2)) {
             try {
 
                 clients.set(clientId, { connection });
-
 
                 const openai = new OpenAI({
                     apiKey: config.OPENAI_API_KEY
@@ -94,8 +93,13 @@ async function main(env = env, args = argv.slice(2)) {
                 session.delegates = delegates;
 
                 const replFx = {
+                    'get-initial-input': async (session) => {
+                        const input = await prompt(session.connection, 'initial_input', sendSystemRequest);
+                        await sendChunk(session.connection, EOL);
+                        return input;
+                    },
                     'get-input': async (session, q = '') => {
-                        const input = await prompt(session.connection, q + ' ');
+                        const input = await prompt(session.connection, q);
                         await sendChunk(session.connection, EOL);
                         return input;
                     },
@@ -164,8 +168,8 @@ async function main(env = env, args = argv.slice(2)) {
                 async function handleEffect(effect, ...args) {
                     try {
                         if (effect in replFx) {
-                            const shouldSend = !(['send-chunk','get-input'].includes(effect) || config.quiet);
-                            const logEffect = ['request-chat-completion'].includes(effect) ? 'send-quiet-log' : 'send-log';
+                            const shouldSend = !(['send-chunk'].includes(effect) || config.quiet);
+                            const logEffect = ['request-chat-completion','get-input','get-initial-input'].includes(effect) ? 'send-quiet-log' : 'send-log';
                             const logText = printPrefix('repl.fx', COLOR.info) + ' ' + effect;
                             if (shouldSend) replFx[logEffect](session, logText + ' start');
                             const result = await replFx[effect](session, ...args);

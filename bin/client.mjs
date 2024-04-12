@@ -51,6 +51,12 @@ async function main(env = env, args = argv.slice(2)) {
 
     const config = await getClientConfig(env, args);
 
+    // TODO args
+    let initialInput = args.join(' ');
+    initialInput = initialInput.length
+        ? `talkpile ${initialInput}`
+        : '';
+
     stdin.setRawMode(true);
 
     const rl = readline.createInterface({
@@ -137,13 +143,16 @@ async function main(env = env, args = argv.slice(2)) {
                 } else if (
                     data?.message?.trim().length
                     && !data?.quiet
-                    && !(data?.log
-                    && config.quiet)
+                    && !(data?.log && config.quiet)
                 ) {
                     stdout.write(`${data.message ?? ''}\r\n`);
                 }
 
-                if (data?.prompt) {
+                if (data?.system) {
+                    if (data?.message == 'initial_input') {
+                        socket.write(`${JSON.stringify({ message: initialInput })}\r\n`);
+                    }
+                } else if (data?.prompt) {
                     rl.prompt(true);
                 } else if (data?.editor) {
                     const message = await edit(data?.message);
