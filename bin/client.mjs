@@ -25,6 +25,7 @@ import * as readline from 'node:readline';
 import { editAsync } from 'external-editor';
 import { getClientConfig } from '../lib/config.js';
 
+const { EOL } = os;
 const exitController = new AbortController();
 const exitSignal = exitController.signal;
 
@@ -64,7 +65,7 @@ async function main(env = env, args = argv.slice(2)) {
         output: stdout,
         terminal: true,
         crlfDelay: Infinity,
-        prompt: os.EOL + '> '
+        prompt: EOL + '> '
     });
 
     if (config.debug) {
@@ -146,7 +147,7 @@ async function main(env = env, args = argv.slice(2)) {
                     && !data?.quiet
                     && !(data?.log && config.quiet)
                 ) {
-                    stdout.write(`${data.message ?? ''}`);
+                    stdout.write(`${data.message ?? ''}${EOL}`);
                 }
 
                 if (data?.system) {

@@ -149,7 +149,7 @@ async function main(env = env, args = argv.slice(2)) {
                             ...args
                         ].join(' ');
                         console.error(message);
-                        return send(session.connection, message);
+                        return sendLog(session.connection, message);
                     },
                     'send-warning': (session, ...args) => {
                         const message = printPrompt(session) + ' ' + printPrefix('warning', COLOR.warn) + ' ' + args.join(' ');
