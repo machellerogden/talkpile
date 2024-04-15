@@ -95,12 +95,10 @@ async function main(env = env, args = argv.slice(2)) {
                 const replFx = {
                     'get-initial-input': async (session) => {
                         const input = await prompt(session.connection, 'initial_input', sendSystemRequest);
-                        await sendChunk(session.connection, EOL);
                         return input;
                     },
                     'get-input': async (session, q = '') => {
                         const input = await prompt(session.connection, q);
-                        await sendChunk(session.connection, EOL);
                         return input;
                     },
                     'get-editor-input': (session) => editor(session.connection),

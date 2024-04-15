@@ -64,7 +64,7 @@ async function main(env = env, args = argv.slice(2)) {
         output: stdout,
         terminal: true,
         crlfDelay: Infinity,
-        prompt: os.EOL
+        prompt: os.EOL + '> '
     });
 
     if (config.debug) {
@@ -113,6 +113,7 @@ async function main(env = env, args = argv.slice(2)) {
             if (depth == 0 && !inQuote) {
                 const data = tryParseData(incoming);
 
+                // handle context requests
                 if (data?.contextRequest) {
                     let message;
 
@@ -145,7 +146,7 @@ async function main(env = env, args = argv.slice(2)) {
                     && !data?.quiet
                     && !(data?.log && config.quiet)
                 ) {
-                    stdout.write(`${data.message ?? ''}\r\n`);
+                    stdout.write(`${data.message ?? ''}`);
                 }
 
                 if (data?.system) {
