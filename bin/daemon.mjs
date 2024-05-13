@@ -28,7 +28,7 @@ import { getDaemonConfig } from '../lib/config.js';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, exitSignal } from '../lib/exit.js';
-import { packageDelegates } from '../lib/gpt/index.js';
+import { packageAgents, packageDelegates } from '../lib/gpt/index.js';
 import { edit } from '../lib/input.js';
 import enquirer from 'enquirer';
 import { send, sendChunk, sendLog, sendQuietLog, sendSystemRequest, sendContextRequest, prompt, editor } from '../lib/connection.js';
@@ -86,10 +86,10 @@ async function main(env = env, args = argv.slice(2)) {
                     `connected as ${clientId}`
                 ].join(' '));
 
-                session.kits = {};
+                const agents = await packageAgents(session);
+                session.agents = agents;
 
                 const delegates = await packageDelegates(session);
-
                 session.delegates = delegates;
 
                 const replFx = {
@@ -114,7 +114,7 @@ async function main(env = env, args = argv.slice(2)) {
                         const message = [
                             printPrompt(session),
                             printPrefix('help', COLOR.success),
-                            `You are in command-mode. Run \`${config.kits.talkpile.command}\` command and ask for help.`
+                            `You are in command-mode. Run \`${session.agents.talkpile.designation}\` command and ask for help.`
                         ].join(' ');
                         console.log(message);
                         return send(session.connection, message);
@@ -174,23 +174,22 @@ async function main(env = env, args = argv.slice(2)) {
                             if (shouldSend) replFx[logEffect](session, logText + ' end');
                             return result;
                         }
-                        for (const [ kitName, kitConfig ] of Object.entries(config.kits)) {
-                            if (kitConfig.disabled) continue;
-                            const kit = session.kits[kitName];
-                            if (effect in kit.fns) {
-                                const logText = printPrefix(kitName + '.' + effect, COLOR.info);
+                        for (const agent of Object.values(session.agents)) {
+                            if (agent.disabled) continue;
+                            if (effect in agent.tools) {
+                                const logText = printPrefix(agent.designation + '.' + effect, COLOR.info);
                                 await replFx['send-log'](session, logText + ' start');
-                                const fn = kit.fns[effect];
-                                if (!fn?.impl) {
-                                    const error = new Error(`No implementation for ${kitName}.${effect}`);
+                                const tool = agent.tools[effect];
+                                if (!tool?.impl) {
+                                    const error = new Error(`No implementation for ${agent.designation}.${effect}`);
                                     await replFx['send-error'](session, error.stack);
                                     return false;
                                 }
-                                if (fn?.confirm) {
-                                    const error = await replFx.confirm(session, `Are you sure you want to run ${kitName}.${effect} with ${JSON.stringify(args[1])}?`, `Aborted ${kitName}.${effect}.`);
+                                if (tool?.confirm) {
+                                    const error = await replFx.confirm(session, `Are you sure you want to run ${agent.designation}.${effect} with ${JSON.stringify(args[0], null, 4)}?`, `Aborted ${agent.designation}.${effect}.`);
                                     if (error) return error;
                                 }
-                                const result = await kit.fns[effect].impl(...args);
+                                const result = await agent.tools[effect].impl(session, agent, ...args);
                                 await replFx['send-log'](session, logText + ' end');
                                 return result;
                             }

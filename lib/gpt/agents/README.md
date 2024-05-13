@@ -1,11 +1,11 @@
-## Kit Schema
+## Agent Schema
 
+designation string
 name string
 description string
-command string
 messages record[]
 getPrelude () => record[]
-fns {[name string]: Function(session, args) => string | record{name string, description string, parameters string[]}}
+tools {[name string]: Function(session, args) => string | record{name string, description string, parameters string[]}}
 getTools () => record[]
 
 
