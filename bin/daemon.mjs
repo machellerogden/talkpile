@@ -66,8 +66,7 @@ async function main(env = env, args = argv.slice(2)) {
                     user: await prompt(connection, 'user', sendContextRequest) ?? config.user,
                     shell_user: await prompt(connection, 'shell_user', sendContextRequest) ?? config.shell_user,
                     working_directory: await prompt(connection, 'working_directory', sendContextRequest) ?? config.cwd,
-                    geolocation: config.geolocation,
-                    settings_path: config.settings_path
+                    geolocation: config.geolocation
                 };
 
                 const prefixes = [];
@@ -88,7 +87,6 @@ async function main(env = env, args = argv.slice(2)) {
 
                 session.agents = await packageAgents(session);
                 session.delegates = await packageDelegates(session);
-                console.log(inspect(session));
 
                 const replFx = {
                     'get-initial-input': async (session) => {
