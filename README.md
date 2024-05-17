@@ -22,7 +22,6 @@ Run `talkpile settings` to locate your settings file.
 Here's an example settings file:
 
 ```json
-
 {
 	"name": "Mac",
 	"geolocation": "Chicago, IL",
@@ -35,20 +34,9 @@ Here's an example settings file:
 		"pirate": {
 			"name": "Jackdaw Hawkins",
 			"designation": "ahoy"
-		},
-		"recruiter": {
-			"name": "The Bobs",
-			"designation": "hr",
-			"description": "Responsible for updating the Talkpile team roster",
-			"instructions": "You're job is to manage the `agents` data inside `/Users/mac/Library/Preferences/talkpile-nodejs/config.js`. Adding a agent entry to the `agents` object will add a member to the team.\n\n",
-			"postscript": "",
-			"temperature": 0.3,
-			"frequency_penalty": 0.2,
-			"presence_penalty": 0.1
 		}
 	}
 }
-
 ```
 
 # License
