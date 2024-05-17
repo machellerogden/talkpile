@@ -1,7 +1,7 @@
 {
     "name": "talkpile",
     "description": "Hackable Agentic REPL",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "bin": {
         "talkpile-daemon": "./bin/daemon.mjs",
         "talkpile": "./bin/client.mjs"
