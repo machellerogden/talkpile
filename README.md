@@ -12,7 +12,11 @@ npm i -g talkpile
 Ensure `OPENAI_API_KEY` is set, then run:
 
 ```sh
-talkpile
+talkpile-daemon # Start the daemon in one terminal
+```
+
+```sh
+talkpile # Start the client in another terminal
 ```
 
 ## Configure
