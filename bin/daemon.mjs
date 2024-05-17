@@ -28,7 +28,7 @@ import { getDaemonConfig } from '../lib/config.js';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown, exitSignal } from '../lib/exit.js';
-import { packageAgents, packageDelegates } from '../lib/gpt/index.js';
+import { packageAgents, packageDelegates, getTools } from '../lib/ai/index.js';
 import { edit } from '../lib/input.js';
 import enquirer from 'enquirer';
 import { send, sendChunk, sendLog, sendQuietLog, sendSystemRequest, sendContextRequest, prompt, editor } from '../lib/connection.js';
@@ -86,11 +86,9 @@ async function main(env = env, args = argv.slice(2)) {
                     `connected as ${clientId}`
                 ].join(' '));
 
-                const agents = await packageAgents(session);
-                session.agents = agents;
-
-                const delegates = await packageDelegates(session);
-                session.delegates = delegates;
+                session.agents = await packageAgents(session);
+                session.delegates = await packageDelegates(session);
+                console.log(inspect(session));
 
                 const replFx = {
                     'get-initial-input': async (session) => {
@@ -167,19 +165,29 @@ async function main(env = env, args = argv.slice(2)) {
                     try {
                         if (effect in replFx) {
                             const shouldSend = !(['send-chunk'].includes(effect) || config.quiet);
-                            const logEffect = ['request-chat-completion','get-input','get-initial-input'].includes(effect) ? 'send-quiet-log' : 'send-log';
+
+                            const logEffect = [
+                                'request-chat-completion',
+                                'get-input',
+                                'get-initial-input'
+                            ].includes(effect) ? 'send-quiet-log' : 'send-log';
+
                             const logText = printPrefix('repl.fx', COLOR.info) + ' ' + effect;
                             if (shouldSend) replFx[logEffect](session, logText + ' start');
                             const result = await replFx[effect](session, ...args);
                             if (shouldSend) replFx[logEffect](session, logText + ' end');
+
                             return result;
                         }
+
+                        // TODO: scope to current agent tools...
                         for (const agent of Object.values(session.agents)) {
                             if (agent.disabled) continue;
-                            if (effect in agent.tools) {
+                            const tools = await getTools(session, agent);
+                            if (effect in tools) {
                                 const logText = printPrefix(agent.designation + '.' + effect, COLOR.info);
                                 await replFx['send-log'](session, logText + ' start');
-                                const tool = agent.tools[effect];
+                                const tool = tools[effect];
                                 if (!tool?.impl) {
                                     const error = new Error(`No implementation for ${agent.designation}.${effect}`);
                                     await replFx['send-error'](session, error.stack);
@@ -189,7 +197,7 @@ async function main(env = env, args = argv.slice(2)) {
                                     const error = await replFx.confirm(session, `Are you sure you want to run ${agent.designation}.${effect} with ${JSON.stringify(args[0], null, 4)}?`, `Aborted ${agent.designation}.${effect}.`);
                                     if (error) return error;
                                 }
-                                const result = await agent.tools[effect].impl(session, agent, ...args);
+                                const result = await tools[effect].impl(session, agent, ...args);
                                 await replFx['send-log'](session, logText + ' end');
                                 return result;
                             }
