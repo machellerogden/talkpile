@@ -56,7 +56,7 @@ async function main(env = env, args = argv.slice(2)) {
     let initialInput = args.join(' ');
     initialInput = initialInput.length
         ? `talkpile ${initialInput}`
-        : 'talkpile';
+        : '';
 
     stdin.setRawMode(true);
 
