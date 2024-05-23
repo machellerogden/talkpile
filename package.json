@@ -3,8 +3,15 @@
     "description": "Hackable Agentic REPL",
     "version": "0.1.9",
     "bin": {
+        "talkpile": "./bin/client.mjs",
         "talkpile-daemon": "./bin/daemon.mjs",
-        "talkpile": "./bin/client.mjs"
+        "talkpile-daemon-load": "./bin/daemon-load.sh",
+        "talkpile-daemon-unload": "./bin/daemon-unload.sh",
+        "talkpile-daemon-start": "./bin/daemon-start.sh",
+        "talkpile-daemon-stop": "./bin/daemon-stop.sh",
+        "talkpile-daemon-kill": "./bin/daemon-kill.sh",
+        "talkpile-daemon-logs": "./bin/daemon-logs.sh",
+        "talkpile-daemon-info": "./bin/daemon-info.sh"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",

@@ -17,32 +17,29 @@
  */
 
 import net from 'node:net';
-import { EOL } from 'node:os';
-import * as readline from 'node:readline/promises';
 import { realpathSync } from 'node:fs';
-import * as url from 'node:url';
-import { stdin, stdout, env, argv, exit } from 'node:process';
+import { fileURLToPath } from 'node:url';
+import process from 'node:process';
 import { tryWithEffects } from 'with-effects';
 import OpenAI from 'openai';
 import { getDaemonConfig } from '../lib/config.js';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
-import { registerShutdown, exitSignal } from '../lib/exit.js';
+import { registerShutdown } from '../lib/exit.js';
 import { packageAgents, packageDelegates, getTools } from '../lib/ai/index.js';
-import { edit } from '../lib/input.js';
-import enquirer from 'enquirer';
 import { send, sendChunk, sendLog, sendQuietLog, sendSystemRequest, sendContextRequest, prompt, editor } from '../lib/connection.js';
 import { nanoid } from 'nanoid';
 
 const clients = new Map();
+let server;
 
-async function main(env = env, args = argv.slice(2)) {
+async function main(env = process.env, args = process.argv.slice(2)) {
 
     const config = await getDaemonConfig(env, args);
 
     const printPrompt = printDefaultPrompt;
 
-    const server = net.createServer(
+    server = net.createServer(
         async function handleConnection(connection) {
 
             let clientId = nanoid(8);
@@ -112,15 +109,17 @@ async function main(env = env, args = argv.slice(2)) {
                             printPrefix('help', COLOR.success),
                             `You are in command-mode. Run \`${session.agents.talkpile.designation}\` command and ask for help.`
                         ].join(' ');
-                        console.log(message);
                         return send(session.connection, message);
                     },
                     'request-chat-completion': async (session, request) => {
-                        if (session.config.debug && session.config.verbose) {
-                            console.log('BEGIN request-chat-completion');
-                            console.log(inspect(request));
+                        if (session.config.debug) {
+                            console.log('before request-chat-completion');
+                            if (session.config.verbose) {
+                                console.log(inspect(request));
+                            } else {
+                                console.log(inspect(request.messages.at(-1)));
+                            }
                         }
-                        console.log(inspect(request));
                         const response = await openai.chat.completions.create(request);
                         return response;
                     },
@@ -262,9 +261,8 @@ async function main(env = env, args = argv.slice(2)) {
 
 }
 
-if (stdin.isTTY
-    && import.meta.url.startsWith('file:')
-    && realpathSync(argv[1]) === url.fileURLToPath(import.meta.url)
+if (import.meta.url.startsWith('file:')
+    && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
 
     function shutdown(exitCode) {
@@ -284,14 +282,14 @@ if (stdin.isTTY
             console.error('unable to close server connection. you may need to manually unlink the socket.');
             console.error(e.stack);
         }
-        exit(exitCode);
+        process.exit(exitCode);
     }
 
     registerShutdown();
 
     (async () => {
         try {
-            await main(env, argv.slice(2));
+            await main(process.env, process.argv.slice(2));
         } catch (error) {
             console.error(error.stack);
             shutdown(1);
