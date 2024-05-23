@@ -22,7 +22,7 @@
     "type": "module",
     "exports": {
         "./ai": "./lib/ai/index.js",
-        "./ai/templates": "./lib/ai/templates/index.js",
+        "./ai/templates": "./lib/ai/templates.js",
         "./ai/tools": "./lib/ai/tools/index.js",
         "./ai/utils": "./lib/ai/utils.js"
     },

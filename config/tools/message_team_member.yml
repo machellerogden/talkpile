@@ -1,0 +1,22 @@
+required: true
+handler:
+  type: system
+definition:
+  type: function
+  function:
+    name: message_team_member
+    description: Have a one-off exchange with a team member. Ask them a question, share
+      information, or request assistance.
+    parameters:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A message to send to team member. Remember your teammate may only
+            have the context you provide here.
+        team_member:
+          type: string
+          description: The team member to send the message to.
+      required:
+        - message
+        - team_member

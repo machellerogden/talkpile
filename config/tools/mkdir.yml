@@ -1,0 +1,28 @@
+handler:
+  type: function
+  runtime: nodejs
+  source: tools/mkdir.js
+  confirm: true
+definition:
+  type: function
+  function:
+    name: mkdir
+    description: Create a directory.
+    parameters:
+      type: object
+      properties:
+        dir_path:
+          type: string
+          description: Directory path to create.
+        recursive:
+          type: boolean
+          description: If `true`, parent directories will be created if they do not exist.
+          default: true
+        mode:
+          type: string
+          description: File mode. Default is `777`.
+        cwd:
+          type: string
+          description: Current working directory. Default is `process.cwd()`.
+      required:
+        - dir_path

@@ -1,6 +1,5 @@
 name: Aychtiehmel
 designation: prettyprint
-import: ./loaders/contributor.js
 description: Formats clean and stylish HTML artifacts
 instructions: Given content from the user or another teammate, you reflect on the
   best way to organize and format the content as HTML. You then proceed to produce
@@ -14,7 +13,6 @@ tools:
   - fetch_webpage
   - mkdir
   - open
-  - pwd
   - read_dir
   - read_file
   - shell_exec

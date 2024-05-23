@@ -1,0 +1,8 @@
+required: true
+handler:
+  type: system
+definition:
+  type: function
+  function:
+    name: goodbye
+    description: IMMEDIATELY call this tool when the user wants to end the chat.

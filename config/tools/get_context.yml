@@ -1,0 +1,11 @@
+required: true
+handler:
+  type: function
+  runtime: nodejs
+  source: tools/get_context.js
+definition:
+  type: function
+  function:
+    name: get_context
+    description: Get the current context data for this session. Current user, current
+      working directory, user's geographic location, and more.

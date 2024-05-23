@@ -1,0 +1,22 @@
+handler:
+  type: function
+  runtime: nodejs
+  source: tools/read_file.js
+  confirm: true
+definition:
+  type: function
+  function:
+    name: read_file
+    description: Read data from a file.
+    properties:
+      file_path:
+        type: string
+        description: File path to read.
+      encoding:
+        type: string
+        description: The encoding of the file. Default is `utf8`.
+      cwd:
+        type: string
+        description: Current working directory. Default is `process.cwd()`.
+    required:
+      - file_path

@@ -1,0 +1,10 @@
+required: true
+handler:
+  type: function
+  runtime: nodejs
+  source: tools/get_team_roster.js
+definition:
+  type: function
+  function:
+    name: get_team_roster
+    description: Get the current team roster.

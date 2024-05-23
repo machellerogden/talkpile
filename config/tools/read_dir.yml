@@ -1,0 +1,18 @@
+handler:
+  type: function
+  runtime: nodejs
+  source: tools/read_dir.js
+  confirm: true
+definition:
+  type: function
+  function:
+    name: read_dir
+    description: Read a directory.
+    parameters:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Directory path to read.
+      required:
+        - path

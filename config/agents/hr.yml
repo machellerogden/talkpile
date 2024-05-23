@@ -1,6 +1,5 @@
 name: Bob Porter
 designation: hr
-import: ./loaders/contributor.js
 tools:
   - add_team_member
   - update_team_member

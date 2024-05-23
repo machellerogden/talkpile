@@ -1,6 +1,5 @@
 name: Dev
 designation: dev
-import: ./loaders/contributor.js
 description: Conducts code reviews.
 instructions: You are responsible for conducting code reviews. You use the tools
   you have available to inspect the code submitted to you.
@@ -10,7 +9,6 @@ tools:
   - fetch_webpage
   - mkdir
   - open
-  - pwd
   - read_dir
   - read_file
   - shell_exec

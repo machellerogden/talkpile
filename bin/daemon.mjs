@@ -116,6 +116,11 @@ async function main(env = env, args = argv.slice(2)) {
                         return send(session.connection, message);
                     },
                     'request-chat-completion': async (session, request) => {
+                        if (session.config.debug && session.config.verbose) {
+                            console.log('BEGIN request-chat-completion');
+                            console.log(inspect(request));
+                        }
+                        console.log(inspect(request));
                         const response = await openai.chat.completions.create(request);
                         return response;
                     },
@@ -161,6 +166,7 @@ async function main(env = env, args = argv.slice(2)) {
 
                 async function handleEffect(effect, ...args) {
                     try {
+
                         if (effect in replFx) {
                             const shouldSend = !(['send-chunk'].includes(effect) || config.quiet);
 
@@ -182,21 +188,35 @@ async function main(env = env, args = argv.slice(2)) {
                         for (const agent of Object.values(session.agents)) {
                             if (agent.disabled) continue;
                             const tools = await getTools(session, agent);
+                            /**
+                             * { [toolName]: { name, description, parameters, confirm, impl } }
+                             */
                             if (effect in tools) {
+
+                                const tool = tools[effect];
+
                                 const logText = printPrefix(agent.designation + '.' + effect, COLOR.info);
                                 await replFx['send-log'](session, logText + ' start');
-                                const tool = tools[effect];
-                                if (!tool?.impl) {
+
+                                if (tool.handler?.type !== 'function') {
+                                    return false;
+                                }
+
+                                if (tool.handler?.impl == null) {
                                     const error = new Error(`No implementation for ${agent.designation}.${effect}`);
                                     await replFx['send-error'](session, error.stack);
                                     return false;
                                 }
-                                if (tool?.confirm) {
+
+                                if (tool.handler?.confirm) {
                                     const error = await replFx.confirm(session, `Are you sure you want to run ${agent.designation}.${effect} with ${JSON.stringify(args[0], null, 4)}?`, `Aborted ${agent.designation}.${effect}.`);
                                     if (error) return error;
                                 }
-                                const result = await tools[effect].impl(session, agent, ...args);
+
+                                const result = await tools[effect].handler.impl(session, agent, ...args);
+
                                 await replFx['send-log'](session, logText + ' end');
+
                                 return result;
                             }
                         }

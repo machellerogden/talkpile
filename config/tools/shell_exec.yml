@@ -1,0 +1,21 @@
+handler:
+  type: function
+  runtime: nodejs
+  source: tools/shell_exec.js
+  confirm: true
+definition:
+  type: function
+  function:
+    name: shell_exec
+    description: Run a shell command.
+    parameters:
+      type: object
+      properties:
+        command:
+          type: string
+          description: Command to run.
+        cwd:
+          type: string
+          description: Current working directory. Default is `process.cwd()`.
+      required:
+        - command

@@ -3,46 +3,32 @@ import { compile as compileHtmlToText } from 'html-to-text';
 
 const convertHtmlToText = compileHtmlToText({});
 
-export default {
-    async impl(session, agent, args) {
-        const { url } = args;
-        let browser;
-        try {
-            browser = await puppeteer.launch({
-                headless: 'new',
-                args: [ '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36' ]
-            });
-            const page = await browser.newPage();
-            await page.goto(url, { waitUntil: 'networkidle0' });
-            const html = await page.evaluate(() => document.querySelector('*').outerHTML);
-            let text = convertHtmlToText(html);
-            if (text?.length > 20000) { // TODO
-                try {
-                    console.log('attempting to downsize the text response');
-                    text = await extract_main_content(session, { text })
-                } catch (error) {
-                    console.error('we tried to extract main content but failed', error.stack);
-                }
+export const handler = async (session, agent, args) => {
+    const { url } = args;
+    let browser;
+    try {
+        browser = await puppeteer.launch({
+            headless: 'new',
+            args: [ '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36' ]
+        });
+        const page = await browser.newPage();
+        await page.goto(url, { waitUntil: 'networkidle0' });
+        const html = await page.evaluate(() => document.querySelector('*').outerHTML);
+        let text = convertHtmlToText(html);
+        if (text?.length > 20000) { // TODO
+            try {
+                console.log('attempting to downsize the text response');
+                text = await extract_main_content(session, { text })
+            } catch (error) {
+                console.error('we tried to extract main content but failed', error.stack);
             }
-            try { await browser.close(); } catch {}
-            return text;
-        } catch (error) {
-            console.error('error with fetch_webpage -', error.stack);
-            try { await browser.close(); } catch {}
-            return 'Error executing webpage fetch.';
         }
-    },
-    name: 'fetch_webpage',
-    description: 'Fetch a webpage and return the HTML content.',
-    parameters: {
-        type: 'object',
-        properties: {
-            url: {
-                type: 'string',
-                description: 'URL of the webpage to fetch.'
-            }
-        },
-        required: ['url']
+        try { await browser.close(); } catch {}
+        return text;
+    } catch (error) {
+        console.error('error with fetch_webpage -', error.stack);
+        try { await browser.close(); } catch {}
+        return 'Error executing webpage fetch.';
     }
 };
 

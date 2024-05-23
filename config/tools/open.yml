@@ -1,0 +1,15 @@
+handler:
+  type: function
+  runtime: nodejs
+  source: tools/open.js
+definition:
+  type: function
+  function:
+    name: open
+    description: Open stuff for the user. URLs, files, executables.
+    properties:
+      target:
+        type: string
+        description: The thing you want to open. Can be a URL, file, or executable. Opens
+          in the default app for the file type. For example, URLs opens in your default
+          browser.
