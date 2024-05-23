@@ -63,10 +63,10 @@ async function main(env = env, args = argv.slice(2)) {
                 });
 
                 const context = {
-                    user: await prompt(connection, 'user', sendContextRequest) ?? config.user,
+                    user: await prompt(connection, 'user', sendContextRequest) ?? config.user?.name,
                     shell_user: await prompt(connection, 'shell_user', sendContextRequest) ?? config.shell_user,
                     working_directory: await prompt(connection, 'working_directory', sendContextRequest) ?? config.cwd,
-                    geolocation: config.geolocation
+                    location: config.user?.location
                 };
 
                 const prefixes = [];

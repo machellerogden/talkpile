@@ -24,8 +24,9 @@ talkpile # Start the client in another terminal
 Here's an example `.talkpile.yaml` file:
 
 ```yaml
-name: Mac
-geolocation: Chicago, IL
+user:
+  name: Mac
+  location: Chicago, IL
 context:
   paths:
     notes_dir: /Users/mac/Library/Mobile Documents/iCloud~md~obsidian/Documents/Green
