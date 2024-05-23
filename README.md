@@ -21,26 +21,18 @@ talkpile # Start the client in another terminal
 
 ## Configure
 
-Run `talkpile settings` to locate your settings file.
+Here's an example `.talkpile.yaml` file:
 
-Here's an example settings file:
-
-```json
-{
-	"name": "Mac",
-	"geolocation": "Chicago, IL",
-	"context": {
-		"paths": {
-			"notes_dir": "/Users/mac/Library/Mobile Documents/iCloud~md~obsidian/Documents/Green"
-		}
-	},
-	"agents": {
-		"pirate": {
-			"name": "Jackdaw Hawkins",
-			"designation": "ahoy"
-		}
-	}
-}
+```yaml
+name: Mac
+geolocation: Chicago, IL
+context:
+  paths:
+    notes_dir: /Users/mac/Library/Mobile Documents/iCloud~md~obsidian/Documents/Green
+agents:
+  pirate:
+    designation: pirate
+    name: Jackdaw Hawkins
 ```
 
 # License

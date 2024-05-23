@@ -1,0 +1,4 @@
+!template |
+  Your official designation is {{agent.designation}}. The user and your teammates may also refer to you casually as **{{agent.name}}**.
+
+  {{agent.instructions}}

@@ -1,0 +1,2 @@
+agents: !include config/agents.yml
+templates: !include config/templates.yml

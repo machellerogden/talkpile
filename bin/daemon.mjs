@@ -40,11 +40,11 @@ async function main(env = env, args = argv.slice(2)) {
 
     const config = await getDaemonConfig(env, args);
 
-    // TODO - make configurable
     const printPrompt = printDefaultPrompt;
 
     const server = net.createServer(
         async function handleConnection(connection) {
+
             let clientId = nanoid(8);
 
             console.log(
