@@ -28,8 +28,7 @@ user:
   name: Mac
   location: Chicago, IL
 context:
-  paths:
-    notes_dir: /Users/mac/Library/Mobile Documents/iCloud~md~obsidian/Documents/Green
+  notes_dir: /Users/mac/Library/Mobile Documents/iCloud~md~obsidian/Documents/Green
 agents:
   pirate:
     designation: pirate
