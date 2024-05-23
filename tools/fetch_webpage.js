@@ -36,8 +36,8 @@ async function extract_main_content(session, args) {
     const { openai } = session;
     const { text } = args;
     try {
-        const options = {
-            model: 'gpt-3.5-turbo-16k',
+        const request = {
+            model: 'gpt-4o',
             temperature: 0.3,
             n: 1,
             messages: [
@@ -46,13 +46,11 @@ async function extract_main_content(session, args) {
                     content:
 `Your job is to identify and extract the primary content from mixed-content text.
 
-Your job is NOT to summarize but rather to identify and extract.
+Your job is NOT to summarize but rather to identify and extract. Use as much detail as necessary to retain the main content.
 
-Retain as much detail as possible on the main content.
+Retain as much detail as possible! Be sure to include specific number (amounts, measurements, etc) if included within the source content.
 
-Be sure to include specific numbers/amounts/measurements if included within the source content.
-
-Respond only with the content you have identified and no additional message.`
+Respond ONLY with the content you have identified.`
                 },
                 {
                     role: 'user',
@@ -61,14 +59,16 @@ Respond only with the content you have identified and no additional message.`
             ]
         };
 
-        const response = await openai.chat.completions.create(options);
+        const response = await openai.chat.completions.create(request);
 
         const { error, usage, choices } = response;
+
         if (error) {
             const e = new Error('error with extract_main_content');
             e.data = error;
             throw e;
         }
+
         const [ choice ] = choices ?? [];
         const { finish_reason, message } = choice;
 

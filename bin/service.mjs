@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import { tryWithEffects } from 'with-effects';
 import OpenAI from 'openai';
-import { getDaemonConfig } from '../lib/config.js';
+import { getServiceConfig } from '../lib/config.js';
 import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown } from '../lib/exit.js';
@@ -35,7 +35,7 @@ let server;
 
 async function main(env = process.env, args = process.argv.slice(2)) {
 
-    const config = await getDaemonConfig(env, args);
+    const config = await getServiceConfig(env, args);
 
     const printPrompt = printDefaultPrompt;
 
@@ -69,6 +69,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                 const prefixes = [];
 
                 const session = {
+                    openai,
                     config,
                     context,
                     prefixes,

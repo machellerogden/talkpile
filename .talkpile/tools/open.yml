@@ -13,3 +13,5 @@ definition:
         description: The thing you want to open. Can be a URL, file, or executable. Opens
           in the default app for the file type. For example, URLs opens in your default
           browser.
+    required:
+      - target

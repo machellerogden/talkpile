@@ -1,16 +1,16 @@
-<!-- Edit below as needed and save to ~/Library/LaunchAgents/talkpile.daemon.plist -->
+<!-- Edit below as needed and save to ~/Library/LaunchAgents/talkpile.service.plist -->
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>talkpile.daemon</string>
+    <string>talkpile.service</string>
     <key>RunAtLoad</key>
     <true/>
     <key>StandardErrorPath</key>
-    <string>/Users/mac.heller-ogden/Library/Logs/talkpile.daemon.stderr.log</string>
+    <string>/Users/mac.heller-ogden/Library/Logs/talkpile.service.stderr.log</string>
     <key>StandardOutPath</key>
-    <string>/Users/mac.heller-ogden/Library/Logs/talkpile.daemon.stdout.log</string>
+    <string>/Users/mac.heller-ogden/Library/Logs/talkpile.service.stdout.log</string>
     <key>EnvironmentVariables</key>
     <dict>
       <key>FORCE_COLOR</key>
@@ -25,7 +25,7 @@
     <key>ProgramArguments</key>
     <array>
       <string>/Users/mac.heller-ogden/n/bin/node</string>
-      <string>bin/daemon.mjs</string>
+      <string>bin/service.mjs</string>
       <string>--debug</string>
       <!--<string>--verbose</string>-->
     </array>
