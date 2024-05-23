@@ -5,10 +5,10 @@
     "bin": {
         "talkpile": "./bin/client.mjs",
         "talkpile-service": "./bin/service.mjs",
+        "talkpile-service-init": "./bin/service.init.sh",
         "talkpile-service-load": "./bin/service.load.sh",
         "talkpile-service-unload": "./bin/service.unload.sh",
         "talkpile-service-start": "./bin/service.start.sh",
-        "talkpile-service-restart": "./bin/service.start.sh",
         "talkpile-service-stop": "./bin/service.stop.sh",
         "talkpile-service-kill": "./bin/service.kill.sh",
         "talkpile-service-logs": "./bin/service.logs.sh",

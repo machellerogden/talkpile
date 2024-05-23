@@ -21,7 +21,7 @@ talkpile-service # Start the service in one terminal
 talkpile # Start the client in another terminal
 ```
 
-## Run as daemon with `launchctl`
+## Install Daemon
 
 ```sh
 # copy the starter plist file to your LaunchAgents directory
@@ -30,25 +30,38 @@ cp ./etc/talkpile.service.plist ~/Library/LaunchAgents/talkpile.service.plist
 # edit the file, replacing placeholders
 vim ~/Library/LaunchAgents/talkpile.service.plist
 
-# register it as a daemon with launchctl
-talkpile-service-load
+# run...
+talkpile-service-init
+```
 
-# check service status
+The `talkpile-service-init` command will register the service with launchctl, kickstart it, and then tail the logs to get you up and running.
+
+Note that if you already have the service running, the `talkpile-service-init` command will stop the service, unload it, and then re-register it.
+
+## Daemon Commands
+
+Once you have the daemon installed, you can use the following commands to manage it:
+
+```sh
+# check service status - will error if not registered
 talkpile-service-info
 
-# start the background service
+# start the background service - will restart if already running
 talkpile-service-start
 
 # tail the logs
 talkpile-service-logs
 
-# stop the service
+# stop the service - will error if not running
 talkpile-service-stop
 
-# kill the service
+# kill the service - will error if not running
 talkpile-service-kill
 
-# unregister the service
+# register the service - will error is already registered
+talkpile-service-load
+
+# unregister the service - will error if not registered
 talkpile-service-unload
 ```
 
