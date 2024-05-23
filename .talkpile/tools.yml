@@ -1,0 +1,13 @@
+delegate: !include .talkpile/tools/delegate.yml
+fetch_webpage: !include .talkpile/tools/fetch_webpage.yml
+get_context: !include .talkpile/tools/get_context.yml
+get_team_roster: !include .talkpile/tools/get_team_roster.yml
+goodbye: !include .talkpile/tools/goodbye.yml
+message_team_member: !include .talkpile/tools/message_team_member.yml
+mkdir: !include .talkpile/tools/mkdir.yml
+open: !include .talkpile/tools/open.yml
+read_dir: !include .talkpile/tools/read_dir.yml
+read_file: !include .talkpile/tools/read_file.yml
+set_context: !include .talkpile/tools/set_context.yml
+write_file: !include .talkpile/tools/write_file.yml
+shell_exec: !include .talkpile/tools/shell_exec.yml

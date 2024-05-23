@@ -1,6 +1,6 @@
 user:
   name: User
   location: Chicago, IL
-agents: !include config/agents.yml
-templates: !include config/templates.yml
-tools: !include config/tools.yml
+agents: !include .talkpile/agents.yml
+templates: !include .talkpile/templates.yml
+tools: !include .talkpile/tools.yml
