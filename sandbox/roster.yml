@@ -1,4 +1,0 @@
-pirate: !include sandbox/agents/pirate.yml
-vulcan: !include sandbox/agents/vulcan.yml
-stormy: !include sandbox/agents/stormy.yml
-ninja: !include sandbox/agents/ninja.yml

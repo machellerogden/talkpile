@@ -1,0 +1,4 @@
+intro: !include config/templates/intro.yml
+team: !include config/templates/team.yml
+tools: !include config/templates/tools.yml
+sendoff: !include config/templates/sendoff.yml

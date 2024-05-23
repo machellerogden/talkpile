@@ -1,0 +1,3 @@
+talkpile: !include config/agents/talkpile.yml
+dev: !include config/agents/dev.yml
+prettyprint: !include config/agents/prettyprint.yml

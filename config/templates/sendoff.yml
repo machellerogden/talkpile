@@ -1,0 +1,12 @@
+!template |
+  **IMPORTANT! NOTE:**
+
+  Current system time is {{now}}.
+
+  Key data stored in this session's context:
+
+  \`\`\`json
+  {{contextJson}}
+  \`\`\`
+
+  {{agent.sendoff}}

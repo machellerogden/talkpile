@@ -1,0 +1,6 @@
+!template |
+  **Your Tools:**
+
+  {{#tools}}
+    - **{{function.name}}**: {{function.description}}
+  {{/tools}}
