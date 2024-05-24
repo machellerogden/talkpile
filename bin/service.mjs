@@ -23,7 +23,7 @@ import process from 'node:process';
 import { tryWithEffects } from 'with-effects';
 import OpenAI from 'openai';
 import { getServiceConfig } from '../lib/config.js';
-import { COLOR, printPrefix, printDefaultPrompt, inspect } from '../lib/print.js';
+import { COLOR, printPrefix, printDefaultPrompt, printChatCompletionRequest, inspect } from '../lib/print.js';
 import { REPL } from '../lib/repl.js';
 import { registerShutdown } from '../lib/exit.js';
 import { packageAgents, packageDelegates, getTools } from '../lib/ai/index.js';
@@ -31,11 +31,18 @@ import { send, sendChunk, sendLog, sendQuietLog, sendSystemRequest, sendContextR
 import { nanoid } from 'nanoid';
 
 const clients = new Map();
+
 let server;
 
 async function main(env = process.env, args = process.argv.slice(2)) {
 
     const config = await getServiceConfig(env, args);
+
+    // `talkpile-service-kill SIGPIPE` to toggle verbose mode
+    process.on('SIGPIPE', () => {
+        config.verbose = !config.verbose;
+        console.log('verbose:', config.verbose);
+    });
 
     const printPrompt = printDefaultPrompt;
 
@@ -114,9 +121,9 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                     },
                     'request-chat-completion': async (session, request) => {
                         if (session.config.debug) {
-                            console.log('before request-chat-completion');
+                            console.log('request-chat-completion');
                             if (session.config.verbose) {
-                                console.log(inspect(request));
+                                console.log(printChatCompletionRequest(request));
                             } else {
                                 console.log(inspect(request.messages.at(-1)));
                             }
@@ -298,3 +305,4 @@ if (import.meta.url.startsWith('file:')
     })();
 
 }
+

@@ -17,6 +17,6 @@ tools:
   - read_file
   - shell_exec
   - write_file
-temperature: 0.2
+temperature: 0.3
 frequency_penalty: 0.1
 presence_penalty: 0.1

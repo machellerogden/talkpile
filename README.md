@@ -43,25 +43,28 @@ Note that if you already have the service running, the `talkpile-service-init` c
 Once you have the daemon installed, you can use the following commands to manage it:
 
 ```sh
-# check service status - will error if not registered
+# check service status
 talkpile-service-info
 
-# start the background service - will restart if already running
+# start the background service (restart if running)
 talkpile-service-start
 
 # tail the logs
 talkpile-service-logs
 
-# stop the service - will error if not running
+# stop the service
 talkpile-service-stop
 
-# kill the service - will error if not running
+# kill the service
 talkpile-service-kill
 
-# register the service - will error is already registered
+# toggle verbose logging
+talkpile-service-kill SIGPIPE
+
+# register the service
 talkpile-service-load
 
-# unregister the service - will error if not registered
+# unregister the service
 talkpile-service-unload
 ```
 

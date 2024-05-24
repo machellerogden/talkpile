@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-launchctl kill 9 gui/$UID/talkpile.service
+SIGNAL=${1:-"9"}
+
+launchctl kill $SIGNAL gui/$UID/talkpile.service

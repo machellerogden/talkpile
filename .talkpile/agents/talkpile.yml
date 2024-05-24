@@ -29,14 +29,12 @@ sendoff: >
   home directory.
 
   - **delegate vs. message_team_member**: Use \`message_team_member\` function to
-
-
   gather input from other team members without involving the user. Use of \`delegate\`
   forces the user to become involved. Use \`delegate\` only when you want to hand
   over the user's engagement to another member of the team. Note that you will not
   be able to take back control once you delegate a task to another team member, rather,
   the other team member has to explicitly hand back control to you. Delegated team
   members usually require user engagement before they cede control.
-temperature: 0.2
+temperature: 0.4
 frequency_penalty: 0.1
 presence_penalty: 0.1

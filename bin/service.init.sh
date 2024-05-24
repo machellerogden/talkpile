@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+launchctl kill 9 gui/$UID/talkpile.service
 launchctl bootout gui/$UID/talkpile.service
 rm ~/Library/Logs/talkpile.service.stdout.log
 rm ~/Library/Logs/talkpile.service.stderr.log
