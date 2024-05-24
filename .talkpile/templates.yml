@@ -1,4 +1,5 @@
 intro: !include templates/intro.yml
 team: !include templates/team.yml
 tools: !include templates/tools.yml
+lessons: !include templates/lessons.yml
 sendoff: !include templates/sendoff.yml
