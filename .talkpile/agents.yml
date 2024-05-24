@@ -1,3 +1,3 @@
-talkpile: !include .talkpile/agents/talkpile.yml
-dev: !include .talkpile/agents/dev.yml
-prettyprint: !include .talkpile/agents/prettyprint.yml
+talkpile: !include agents/talkpile.yml
+dev: !include agents/dev.yml
+prettyprint: !include agents/prettyprint.yml

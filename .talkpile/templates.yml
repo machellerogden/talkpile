@@ -1,4 +1,4 @@
-intro: !include .talkpile/templates/intro.yml
-team: !include .talkpile/templates/team.yml
-tools: !include .talkpile/templates/tools.yml
-sendoff: !include .talkpile/templates/sendoff.yml
+intro: !include templates/intro.yml
+team: !include templates/team.yml
+tools: !include templates/tools.yml
+sendoff: !include templates/sendoff.yml
