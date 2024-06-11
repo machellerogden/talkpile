@@ -52,11 +52,11 @@ async function main(env = env, args = argv.slice(2)) {
 
     const config = await getClientConfig(env, args);
 
-    // TODO args
-    let initialInput = args.join(' ');
+    let initialInput = config.input.join(' ');
+
     initialInput = initialInput.length
         ? `talkpile ${initialInput}`
-        : '';
+        : 'talkpile Hello, Talkpile.';
 
     stdin.setRawMode(true);
 
@@ -119,10 +119,13 @@ async function main(env = env, args = argv.slice(2)) {
                     let message;
 
                     if (data?.message) {
-                        if (data.message == 'working_directory') {
-                            message = cwd();
-                        } else if (data.message == 'shell_user') {
-                            message = os.userInfo().username;
+                        if (data.message == 'get_client_context') {
+                            message = JSON.stringify({
+                                user: config.user,
+                                working_directory: cwd(),
+                                shell_user: os.userInfo().username,
+                                ...config.context
+                            });
                         } else if (data.message in config) {
                             if (data.message in config) {
                                 message = config[data.message];

@@ -30,7 +30,7 @@ import { packageAgents, packageDelegates, getTools } from '../lib/ai/index.js';
 import { send, sendChunk, sendLog, sendQuietLog, sendSystemRequest, sendContextRequest, prompt, editor } from '../lib/connection.js';
 import { nanoid } from 'nanoid';
 
-const clients = new Map();
+const clients = new Map(); // in-memory client store, for now
 
 let server;
 
@@ -54,7 +54,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
             console.log(
                 printPrompt(),
                 printPrefix('info', COLOR.info),
-                'client connected',
+                `Client connected: ${clientId}`,
                 clientId
             );
 
@@ -66,12 +66,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                     apiKey: config.OPENAI_API_KEY
                 });
 
-                const context = {
-                    user: await prompt(connection, 'user', sendContextRequest) ?? config.user?.name,
-                    shell_user: await prompt(connection, 'shell_user', sendContextRequest) ?? config.shell_user,
-                    working_directory: await prompt(connection, 'working_directory', sendContextRequest) ?? config.cwd,
-                    location: config.user?.location
-                };
+                const context = await prompt(connection, 'get_client_context', sendContextRequest) ?? {};
 
                 const prefixes = [];
 
@@ -244,7 +239,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                     console.log(
                         printPrompt(),
                         printPrefix('info', COLOR.info),
-                        'client disconnected'
+                        `Client disconnected: ${clientId}`
                     );
                 });
 
@@ -264,7 +259,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
     });
 
     server.listen(config.port, () => {
-        console.log(printPrompt(), printPrefix('info', COLOR.info), `listening on`, server.address().port);
+        console.log(printPrompt(), printPrefix('info', COLOR.info), `Listening on`, server.address().port);
     });
 
 }
@@ -274,20 +269,19 @@ if (import.meta.url.startsWith('file:')
 ) {
 
     function shutdown(exitCode) {
-        console.log('exit code:', exitCode);
+        console.log('Exit Code:', exitCode);
         exitCode = exitCode ?? 0;
-        console.log('good bye!');
         for (const [clientId, client] of clients) {
-            console.log(`disconnecting client ${clientId}`);
+            console.log(`Disconnecting client: ${clientId}`);
             clients.delete(clientId);
             client.connection.end();
         }
         try {
-            console.log('closing server connection...');
+            console.log('Closing server connection...');
             server.close();
-            console.log('server connection close.');
+            console.log('Server connection closed.');
         } catch (e) {
-            console.error('unable to close server connection. you may need to manually unlink the socket.');
+            console.error('Unable to close server connection. You may need to manually unlink the socket.');
             console.error(e.stack);
         }
         process.exit(exitCode);

@@ -6,7 +6,7 @@ definition:
   type: function
   function:
     name: open
-    description: Open stuff for the user. URLs, files, executables.
+    description: Open stuff for the user. URLs, files, executables. ALWAYS pass value via the `target` property when specifying what to open, regardless of the type. For example, if you want to open a URL, pass the URL as the value of the `target` property.
     properties:
       target:
         type: string
