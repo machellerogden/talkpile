@@ -15,7 +15,7 @@ export const handler = async (session, agent, args) => {
         await page.goto(url, { waitUntil: 'networkidle0' });
         const html = await page.evaluate(() => document.querySelector('*').outerHTML);
         let text = convertHtmlToText(html);
-        if (text?.length > 20000) { // TODO
+        if (text?.length > 80000) { // TODO
             try {
                 console.log('attempting to downsize the text response');
                 text = await extract_main_content(session, { text })

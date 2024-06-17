@@ -34,14 +34,22 @@
         "./ai/tools": "./lib/ai/tools/index.js",
         "./ai/utils": "./lib/ai/utils.js"
     },
+    "contributors": [
+        {
+            "name": "Mac Heller-Ogden",
+            "email": "machellerogden@gmail.com"
+        }
+    ],
     "dependencies": {
         "@picovoice/porcupine-node": "^3.0.2",
         "@picovoice/porcupine-web": "^3.0.3",
         "@picovoice/pvrecorder-node": "^1.2.2",
         "@picovoice/web-voice-processor": "^4.0.9",
+        "axios": "^1.7.2",
         "chalk": "^5.3.0",
         "conf": "^12.0.0",
         "deepmerge": "^4.3.1",
+        "dirty-json": "^0.9.2",
         "enquirer": "^2.4.1",
         "external-editor": "^3.1.0",
         "find-up": "^7.0.0",
@@ -54,6 +62,7 @@
         "meow": "^13.2.0",
         "mustache": "^4.2.0",
         "nanoid": "^5.0.6",
+        "ollama": "^0.5.1",
         "open": "^10.1.0",
         "openai": "^4.28.4",
         "puppeteer": "^22.4.1",
