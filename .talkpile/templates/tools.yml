@@ -1,5 +1,5 @@
 !template |
-  **Your Tools:**
+  **Your Tools**
 
   {{#tools}}
     - **{{function.name}}**: {{function.description}}

@@ -1,5 +1,7 @@
 !template |
-  **IMPORTANT! NOTE:**
+  ---
+
+  **IMPORTANT! Take note of the following facts:**
 
   Current system time is {{now}}.
 

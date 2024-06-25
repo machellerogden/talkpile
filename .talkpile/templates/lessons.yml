@@ -2,7 +2,5 @@
   {{#agent.lessons}}
     **Lessons Learned From Previous Sessions:**
 
-    Take note that of some of the key lessons learned from previous sessions:
-
     {{agent.lessons}}
   {{/agent.lessons}}

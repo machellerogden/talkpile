@@ -22,7 +22,8 @@ definition:
             with this request. Do not delegate control to another team member.
         team_member:
           type: string
-          description: The team member to whom control is being delegated.
+          description: The team member to whom control is being delegated. Always use
+            the team member's designation, not their name.
       required:
         - message
         - team_member

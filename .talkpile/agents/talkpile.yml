@@ -1,4 +1,5 @@
 name: Talkpile
+role: Talkpile Team Leader
 designation: talkpile
 model: gpt-4o
 tools:
