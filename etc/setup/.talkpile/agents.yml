@@ -1,0 +1,10 @@
+pirate: !include agents/pirate.yml
+vulcan: !include agents/vulcan.yml
+idea: !include agents/idea.yml
+ninja: !include agents/ninja.yml
+dr_med: !include agents/dr_med.yml
+dev: !include agents/dev.yml
+prettyprint: !include agents/prettyprint.yml
+prompt_engineer: !include agents/prompt_engineer.yml
+aws: !include agents/aws.yml
+graphviz: !include agents/graphviz.yml

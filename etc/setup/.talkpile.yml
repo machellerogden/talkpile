@@ -1,0 +1,8 @@
+user:
+  name: Your Name
+  location: Chicago, IL
+#voice:
+  #keyword_file: /Users/your-username/repos/talkpile/etc/keywords/Talk-Pile_en_mac_v3_0_0.ppn
+#context:
+  #notes_dir: /Users/your-username/Library/Mobile Documents/iCloud~md~obsidian/Documents/Green
+agents: !include .talkpile/agents.yml

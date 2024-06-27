@@ -12,4 +12,4 @@ launchctl print gui/$UID/talkpile.service
 
 launchctl kickstart -kp gui/$UID/talkpile.service
 
-tail -n 500 -f ~/Library/Logs/talkpile.service.stdout.log ~/Library/Logs/talkpile.service.stderr.log
+tail -q -n 1000 -f ~/Library/Logs/talkpile.service.stdout.log ~/Library/Logs/talkpile.service.stderr.log | awk '{ print; fflush(stdout) }'

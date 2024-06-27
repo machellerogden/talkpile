@@ -7,13 +7,21 @@
 npm i -g talkpile
 ```
 
+## Setup
+
+```sh
+talkpile-setup
+```
+
 ## Start Service
 
-Ensure `OPENAI_API_KEY` is set, then run:
+Ensure `OPENAI_API_KEY` is present in your terminal environment, then run:
 
 ```sh
 talkpile-service # Start the service in one terminal
 ```
+
+> If you don't have an OpenAI API key, you can get one [here](https://platform.openai.com/signup).
 
 ## Start Client
 
@@ -21,18 +29,21 @@ talkpile-service # Start the service in one terminal
 talkpile # Start the client in another terminal
 ```
 
-## Install Daemon
+## Install as System Daemon (MacOS Only)
 
 ```sh
 # copy the starter plist file to your LaunchAgents directory
 cp ./etc/talkpile.service.plist ~/Library/LaunchAgents/talkpile.service.plist
 
-# edit the file, replacing placeholders
+# edit the file, replacing all instances of `your-user-name`
+# with your local username as used by your home folder and
+# `your-api-key` with your actual OpenAI API key.
 vim ~/Library/LaunchAgents/talkpile.service.plist
 
 # run...
 talkpile-service-init
 ```
+
 
 The `talkpile-service-init` command will register the service with launchctl, kickstart it, and then tail the logs to get you up and running.
 
@@ -94,7 +105,7 @@ agents:
     name: Jackdaw Hawkins
 ```
 
-See `.talkpile/` directory for more examples.
+> Check your `~/.talkpile` directory after running `talkpile-setup` for examples of agent configurations and more. The setup creates plenty of examples to get you started.
 
 # License
 

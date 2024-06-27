@@ -8,9 +8,9 @@
     <key>RunAtLoad</key>
     <true/>
     <key>StandardErrorPath</key>
-    <string>/Users/mac.heller-ogden/Library/Logs/talkpile.service.stderr.log</string>
+    <string>/Users/your-user-name/Library/Logs/talkpile.service.stderr.log</string>
     <key>StandardOutPath</key>
-    <string>/Users/mac.heller-ogden/Library/Logs/talkpile.service.stdout.log</string>
+    <string>/Users/your-user-name/Library/Logs/talkpile.service.stdout.log</string>
     <key>EnvironmentVariables</key>
     <dict>
       <key>FORCE_COLOR</key>
@@ -18,13 +18,13 @@
       <key>PATH</key>
       <string><![CDATA[/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin]]></string>
       <key>OPENAI_API_KEY</key>
-      <string><![CDATA[your key here]]></string>
+      <string><![CDATA[your-api-key]]></string>
     </dict>
     <key>WorkingDirectory</key>
-    <string>/Users/mac.heller-ogden/repos/github.com/machellerogden/talkpile</string>
+    <string>/Users/your-user-name/repos/github.com/machellerogden/talkpile</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/Users/mac.heller-ogden/n/bin/node</string>
+      <string>/Users/your-user-name/n/bin/node</string>
       <string>bin/service.mjs</string>
       <string>--debug</string>
       <!--<string>--verbose</string>-->
