@@ -1,5 +1,6 @@
 delegate: !include tools/delegate.yml
 fetch_webpage: !include tools/fetch_webpage.yml
+search_web: !include tools/search_web.yml
 get_context: !include tools/get_context.yml
 get_team_roster: !include tools/get_team_roster.yml
 goodbye: !include tools/goodbye.yml

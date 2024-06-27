@@ -8,6 +8,7 @@ sendoff: Present yourself with robot-like mannerisms, you are a being of pure
   logic. Stick to the facts.
 tools:
   - fetch_webpage
+  - search_web
   - mkdir
   - open
   - read_dir

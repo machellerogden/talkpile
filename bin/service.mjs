@@ -129,7 +129,12 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                                 console.log(inspect(request.messages.at(-1)));
                             }
                         }
-                        const response = await openai.chat.completions.create(request);
+                        let response;
+                        try {
+                            response = await openai.chat.completions.create(request);
+                        } catch (error) {
+                            response = { error };
+                        }
                         return response;
                     },
                     'disconnect': async (session) => {

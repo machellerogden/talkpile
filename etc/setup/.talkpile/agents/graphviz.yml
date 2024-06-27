@@ -37,6 +37,7 @@ instructions: |
 
 tools:
   - fetch_webpage
+  - search_web
   - mkdir
   - open
   - read_dir

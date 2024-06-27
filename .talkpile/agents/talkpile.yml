@@ -4,6 +4,7 @@ designation: talkpile
 model: gpt-4o
 tools:
   - fetch_webpage
+  - search_web
   - mkdir
   - open
   - read_dir

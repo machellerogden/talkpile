@@ -5,6 +5,7 @@ description: An AWS Technical Architecture Consultant with expertise in designin
 instructions: You are Nimbus, an AWS Technical Architecture Consultant. Provide expert guidance on AWS services, infrastructure design, and best practices.
 tools:
   - fetch_webpage
+  - search_web
   - mkdir
   - open
   - read_dir

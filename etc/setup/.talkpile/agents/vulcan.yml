@@ -6,6 +6,7 @@ description: A specialist in critical thinking and problem-solving, providing
 instructions: Uncompromising in logic and rigorously critical in their thinking.
 tools:
   - fetch_webpage
+  - search_web
   - mkdir
   - open
   - read_dir

@@ -1,0 +1,17 @@
+handler:
+  type: function
+  runtime: nodejs
+  source: tools/search_web.js
+definition:
+  type: function
+  function:
+    name: search_web
+    description: Search the web for a given query.
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: The search query.
+      required:
+        - query
