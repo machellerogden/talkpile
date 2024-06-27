@@ -7,7 +7,7 @@ export const handler = async (session, agent, args) => {
         try {
             exec(command, { cwd }, (error, stdout, stderr) => {
                 if (error) {
-                    resolve(`Error running shell_exec: ${error.stack}`);
+                    resolve(stderr);
                 } else {
                     resolve(stdout);
                 }

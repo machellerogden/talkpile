@@ -66,7 +66,13 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                     apiKey: config.OPENAI_API_KEY
                 });
 
-                const context = await prompt(connection, 'get_client_context', sendContextRequest) ?? {};
+                let context = await prompt(connection, 'get_client_context', sendContextRequest) ?? {};
+
+                try {
+                    context = JSON.parse(context);
+                } catch (e) {
+                    console.error(e.stack);
+                }
 
                 const prefixes = [];
 
@@ -211,7 +217,11 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                                 }
 
                                 if (tool.handler?.confirm) {
-                                    const error = await replFx.confirm(session, `Are you sure you want to run ${agent.designation}.${effect} with ${JSON.stringify(args[0], null, 4)}?`, `Aborted ${agent.designation}.${effect}.`);
+                                    const error = await replFx.confirm(
+                                        session,
+                                        `Allow ${agent.designation} to run ${effect} with the following input?\n${inspect(args[0])}?`,
+                                        `User has declined your request to use ${effect}. This is not an error. Ask the user why they have declined your request.`
+                                    );
                                     if (error) return error;
                                 }
 

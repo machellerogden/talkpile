@@ -11,11 +11,9 @@ async function extract_main_content(session, agent, args) {
                 {
                     role: 'system',
                     content:
-`Your job is to identify and extract the primary content from a textual representation of a webpage. The textual representation will often contain a lot of extraneous information, such as navigation links, advertisements, and other content that is not the main focus of the page.
+`Your job is to identify and extract the main content from a textual representation of a webpage. The textual representation will often contain a lot of extraneous information, such as navigation links, advertisements, and other content that is not the main focus of the page.
 
-Your job is NOT to summarize but rather to identify and extract. Use as much detail as necessary to retain the main content.
-
-Retain as much detail as possible! Be sure to include specific number (amounts, measurements, etc) if included within the source content.
+Your job is NOT to summarize but rather to identify and extract. Filter out the editorial asides, unrelated lists of articles, navigation artifacts, etc but always retain as much detail as possible on the main content. Be sure to include specific number (amounts, measurements, etc) if included within the source content.
 
 Add a prefix to your response to indicate that the content has been processed.`
                 },
@@ -50,7 +48,7 @@ export const handler = async (session, agent, args) => {
     try {
         const response = await axios.get(`https://r.jina.ai/${url}`);
         text = response.data;
-        if (text?.length > 80000) {
+        if (text?.length > 120000) {
             try {
                 console.log('attempting to downsize the text response');
                 text = await extract_main_content(session, agent, { text })

@@ -32,12 +32,16 @@ talkpile # Start the client in another terminal
 ## Install as System Daemon (MacOS Only)
 
 ```sh
-# copy the starter plist file to your LaunchAgents directory
+# Copy the starter plist file to your LaunchAgents directory.
 cp ./etc/talkpile.service.plist ~/Library/LaunchAgents/talkpile.service.plist
 
-# edit the file, replacing all instances of `your-user-name`
+# Edit the file, replacing all instances of `your-user-name`
 # with your local username as used by your home folder and
 # `your-api-key` with your actual OpenAI API key.
+# `WorkingDirectory` should specific the directory where you
+# cloned this repository.
+# Update PATH environment variable to include any extra bin
+# directories that you want Talkpile to be able to use.
 vim ~/Library/LaunchAgents/talkpile.service.plist
 
 # run...
