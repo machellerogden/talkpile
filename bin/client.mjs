@@ -24,6 +24,7 @@ import * as url from 'node:url';
 import * as readline from 'node:readline';
 import { editAsync } from 'external-editor';
 import { getClientConfig } from '../lib/config.js';
+import jsonrpc from 'jsonrpc-lite';
 
 const { EOL } = os;
 const exitController = new AbortController();
@@ -34,17 +35,17 @@ export function exit(ms = 0) {
 }
 
 const edit = async (text, config) => new Promise((resolve, reject) => {
-    editAsync(text, (error, data) => {
+    editAsync(text, (error, value) => {
         if (error) return reject(error);
-        return resolve(data);
+        return resolve(value);
     }, config);
 });
 
-function tryParseData(json) {
+function tryParseNull(json) {
     try {
         return JSON.parse(json);
-    } catch (e) {
-        return { message: '', prompt: true };
+    } catch {
+        return;
     }
 }
 
@@ -89,6 +90,8 @@ async function main(env = env, args = argv.slice(2)) {
     let incoming = '';
     let depth = 0;
     let inQuote = false;
+    let rpcId;
+    let rpcMethod;
 
     socket.on('data', async buf => {
 
@@ -112,56 +115,61 @@ async function main(env = env, args = argv.slice(2)) {
                 continue;
             }
             if (depth == 0 && !inQuote) {
-                const data = tryParseData(incoming);
+                const rpc = tryParseNull(incoming);
 
-                // handle context requests
-                if (data?.contextRequest) {
-                    let message;
-
-                    if (data?.message) {
-                        if (data.message == 'get_client_context') {
-                            message = JSON.stringify({
-                                user: config.user,
-                                working_directory: cwd(),
-                                shell_user: os.userInfo().username,
-                                ...config.context
-                            });
-                        } else if (data.message in config) {
-                            if (data.message in config) {
-                                message = config[data.message];
-                            } else {
-                                stdout.write(`${data.message ?? ''}\r\n`);
-                                rl.prompt(true);
-                                incoming = '';
-                                continue;
-                            }
-                        }
-                    }
-
-                    socket.write(`${JSON.stringify({ message })}\r\n`);
+                if (!rpc || !rpc.id || !rpc.method) {
+                    console.error('invalid rpc', incoming);
+                    // tolerate for now...
+                    rl.prompt(true);
                     incoming = '';
                     continue;
                 }
 
-                if (data?.chunk && data?.message) {
-                    stdout.write(data.message);
-                } else if (
-                    data?.message?.trim().length
-                    && !data?.quiet
-                    && !(data?.log && config.quiet)
-                ) {
-                    stdout.write(`${data.message ?? ''}${EOL}`);
-                }
+                rpcId = rpc.id;
+                rpcMethod = rpc.method
 
-                if (data?.system) {
-                    if (data?.message == 'initial_input') {
-                        socket.write(`${JSON.stringify({ message: initialInput })}\r\n`);
-                    }
-                } else if (data?.prompt) {
-                    rl.prompt(true);
-                } else if (data?.editor) {
-                    const message = await edit(data?.message);
-                    socket.write(`${JSON.stringify({ message })}\r\n`);
+                switch (rpcMethod) {
+
+                    case 'get-client-context':
+                        socket.write(`${JSON.stringify(jsonrpc.success(rpcId, {
+                            user: config.user,
+                            working_directory: cwd(),
+                            shell_user: os.userInfo().username,
+                            ...config.context
+                        }))}\r\n`);
+                        break;
+
+                    case 'log-message':
+                        if (rpc.params.level == 'info' && !config.quiet) {
+                            stdout.write((rpc.params.message ?? '') + EOL);
+                        }
+                        break;
+
+                    case 'print-message':
+                        stdout.write((rpc.params.message ?? '') + EOL);
+                        break;
+
+                    case 'print-chunk':
+                        stdout.write(rpc.params.chunk ?? '');
+                        break;
+
+                    case 'resolve-initial-input':
+                        socket.write(`${JSON.stringify(jsonrpc.success(rpcId, initialInput))}\r\n`);
+                        break;
+
+                    case 'get-user-input':
+                        rl.prompt(true);
+                        break;
+
+                    case 'get-editor-input':
+                        const input = await edit(rpc?.params.message);
+                        socket.write(`${JSON.stringify(jsonrpc.success(rpcId, input))}\r\n`);
+                        break;
+
+                    default:
+                        console.log('wat?', rpc);
+                        rl.prompt(true);
+                        break;
                 }
 
                 incoming = '';
@@ -175,7 +183,7 @@ async function main(env = env, args = argv.slice(2)) {
     readline.cursorTo(stdin, 0);
 
     rl.on('line', message => {
-        socket.write(`${JSON.stringify({ message })}\r\n`);
+        socket.write(`${JSON.stringify(jsonrpc.success(rpcId, message))}\r\n`);
     }).on('close', () => {
         console.log('exiting...');
         process.exit(0);

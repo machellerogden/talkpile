@@ -27,8 +27,76 @@ import { COLOR, printPrefix, printDefaultPrompt, printChatCompletionRequest, ins
 import { REPL } from '../lib/repl.js';
 import { registerShutdown } from '../lib/exit.js';
 import { packageAgents, packageDelegates, getTools } from '../lib/ai/index.js';
-import { send, sendChunk, sendLog, sendQuietLog, sendSystemRequest, sendContextRequest, prompt, editor } from '../lib/connection.js';
+import { editor } from '../lib/connection.js';
 import { nanoid } from 'nanoid';
+import jsonrpc from 'jsonrpc-lite';
+
+export function send(connection, method, params) {
+    const id = nanoid(8);
+    const data = jsonrpc.request(id, method, params);
+    const json = JSON.stringify(data);
+    const success = connection.write(`${json}\n`);
+    if (!success) {
+        console.error('Failed to write to connection');
+    }
+    return data;
+}
+
+function tryParseNull(json) {
+    try {
+        return JSON.parse(json);
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function prompt(connection, method, params) {
+    const request = params ? send(connection, method, params) : send(connection, method);
+
+    let incoming = '';
+    let depth = 0;
+    let inQuote = false;
+    let received;
+    try {
+        received = await new Promise((resolve, reject) => {
+            const handler = async (buf) => {
+                const str = buf.toString();
+                const chars = str.split('');
+                for (let i = 0; i < chars.length; i++) {
+                    incoming += chars[i];
+                    if (chars[i - 1] == '\\' && chars[i] == '"') continue;
+                    if (chars[i] == '"') {
+                        inQuote = !inQuote;
+                        continue;
+                    }
+                    if (inQuote) continue;
+                    if (['{', '['].includes(chars[i])) {
+                        depth++;
+                        continue;
+                    }
+                    if (['}', ']'].includes(chars[i])) {
+                        depth--;
+                        continue;
+                    }
+                    if (depth == 0 && !inQuote) {
+                        const data = tryParseNull(incoming) ?? { id: null, result: null };
+                        if (data.id === request.id) {
+                            resolve(data?.result);
+                        } else {
+                            reject(new Error('Invalid response'));
+                        }
+                    }
+                }
+            };
+            connection.on('data', handler);
+            connection.on('error', reject);
+        });
+    } catch (e) {
+        console.error(e.stack);
+    }
+    connection.removeAllListeners();
+    return received;
+}
 
 const clients = new Map(); // in-memory client store, for now
 
@@ -66,18 +134,31 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                     apiKey: config.OPENAI_API_KEY
                 });
 
-                let context = await prompt(connection, 'get_client_context', sendContextRequest) ?? {};
+                // TODO
+                // import { createProviderRegistry } from '../lib/ai/api.js';
+                //const providerConfigs = {
+                    //openai: {
+                        //apiKey: process.env.OPENAI_API_KEY
+                    //},
+                    //anthropic: {
+                        //apiKey: process.env.ANTHROPIC_API_KEY
+                    //},
+                    //vertex: {
+                        //project: process.env.GCLOUD_PROJECT_ID,
+                        //location: 'us-central1'
+                    //},
+                    //ollama: {
+                        //baseUrl: 'http://localhost:11434/api'
+                    //}
+                //};
 
-                try {
-                    context = JSON.parse(context);
-                } catch (e) {
-                    console.error(e.stack);
-                }
+                //const providers = new createProviderRegistry(providerConfigs);
+
+                let context = await prompt(connection, 'get-client-context') ?? {};
 
                 const prefixes = [];
 
                 const session = {
-                    openai,
                     config,
                     context,
                     prefixes,
@@ -85,27 +166,28 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                     connection
                 };
 
-                send(connection, [
-                    printPrompt(session),
-                    printPrefix('info', COLOR.info),
-                    `connected as ${clientId}`
-                ].join(' '));
+                send(connection, 'print-message', {
+                    message: [
+                        printPrompt(session),
+                        printPrefix('info', COLOR.info),
+                        `connected as ${clientId}`
+                    ].join(' ')
+                });
 
                 session.agents = await packageAgents(session);
                 session.delegates = await packageDelegates(session);
 
                 const replFx = {
                     'get-initial-input': async (session) => {
-                        const input = await prompt(session.connection, 'initial_input', sendSystemRequest);
+                        const input = await prompt(session.connection, 'resolve-initial-input');
                         return input;
                     },
                     'get-input': async (session, q = '') => {
-                        const input = await prompt(session.connection, q);
+                        const input = await prompt(session.connection, 'get-user-input', q);
                         return input;
                     },
-                    'get-editor-input': (session) => editor(session.connection),
                     'send-chunk': (session, chunk) => {
-                        return sendChunk(session.connection, chunk);
+                        return send(session.connection, 'print-chunk', { chunk });
                     },
                     'confirm': async (session, question, error) => {
                         const answer = await prompt(session.connection, question + ' (y/n)');
@@ -118,7 +200,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                             printPrefix('help', COLOR.success),
                             `You are in command-mode. Run \`${session.agents.talkpile.designation}\` command and ask for help.`
                         ].join(' ');
-                        return send(session.connection, message);
+                        return send(session.connection, 'print-message', { message });
                     },
                     'request-chat-completion': async (session, request) => {
                         if (session.config.debug) {
@@ -146,15 +228,15 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                             ...args
                         ].join(' ');
                         console.log(message);
-                        return sendLog(session.connection, message);
+                        return send(session.connection, 'log-message', { message, level: 'info' });
                     },
-                    'send-quiet-log': (session, ...args) => {
+                    'send-debug-log': (session, ...args) => {
                         const message = [
                             printPrompt(session),
                             ...args
                         ].join(' ');
                         console.log(message);
-                        return sendQuietLog(session.connection, message);
+                        return send(session.connection, 'log-message', { message, level: 'debug' });
                     },
                     'send-error': (session, ...args) => {
                         const message = [
@@ -163,17 +245,17 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                             ...args
                         ].join(' ');
                         console.error(message);
-                        return sendLog(session.connection, message);
+                        return send(session.connection, 'log-message', { message });
                     },
                     'send-warning': (session, ...args) => {
                         const message = printPrompt(session) + ' ' + printPrefix('warning', COLOR.warn) + ' ' + args.join(' ');
                         console.warn(message);
-                        return send(session.connection, message);
+                        return send(session.connection, 'print-message', { message });
                     },
                     'unhandled-tool-call': (session, tool_call) => {
                         const message = printPrompt(session) + ' ' + printPrefix('error', COLOR.error) + ' ' + 'unhandled-tool-call';
                         console.warn(message);
-                        return send(session.connection, message);
+                        return send(session.connection, 'print-message', { message });
                     }
                 };
 
@@ -187,7 +269,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                                 'request-chat-completion',
                                 'get-input',
                                 'get-initial-input'
-                            ].includes(effect) ? 'send-quiet-log' : 'send-log';
+                            ].includes(effect) ? 'send-debug-log' : 'send-log';
 
                             const logText = printPrefix('repl.fx', COLOR.info) + ' ' + effect;
                             if (shouldSend) replFx[logEffect](session, logText + ' start');
