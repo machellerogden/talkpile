@@ -91,7 +91,9 @@ async function main(env = env, args = argv.slice(2)) {
     let depth = 0;
     let inQuote = false;
     let rpcId;
-    let rpcMethod;
+
+    const reply = (message, state = 'success') =>
+        socket.write(`${JSON.stringify(jsonrpc[state](rpcId, message))}\r\n`);
 
     socket.on('data', async buf => {
 
@@ -126,17 +128,16 @@ async function main(env = env, args = argv.slice(2)) {
                 }
 
                 rpcId = rpc.id;
-                rpcMethod = rpc.method
 
-                switch (rpcMethod) {
+                switch (rpc.method) {
 
                     case 'get-client-context':
-                        socket.write(`${JSON.stringify(jsonrpc.success(rpcId, {
+                        reply({
                             user: config.user,
                             working_directory: cwd(),
                             shell_user: os.userInfo().username,
                             ...config.context
-                        }))}\r\n`);
+                        });
                         break;
 
                     case 'log-message':
@@ -154,7 +155,7 @@ async function main(env = env, args = argv.slice(2)) {
                         break;
 
                     case 'resolve-initial-input':
-                        socket.write(`${JSON.stringify(jsonrpc.success(rpcId, initialInput))}\r\n`);
+                        reply(initialInput);
                         break;
 
                     case 'get-user-input':
@@ -163,7 +164,7 @@ async function main(env = env, args = argv.slice(2)) {
 
                     case 'get-editor-input':
                         const input = await edit(rpc?.params.message);
-                        socket.write(`${JSON.stringify(jsonrpc.success(rpcId, input))}\r\n`);
+                        reply(input);
                         break;
 
                     default:
@@ -183,7 +184,7 @@ async function main(env = env, args = argv.slice(2)) {
     readline.cursorTo(stdin, 0);
 
     rl.on('line', message => {
-        socket.write(`${JSON.stringify(jsonrpc.success(rpcId, message))}\r\n`);
+        reply(message);
     }).on('close', () => {
         console.log('exiting...');
         process.exit(0);
