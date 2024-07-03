@@ -111,6 +111,21 @@ agents:
 
 > Check your `~/.talkpile` directory after running `talkpile-setup` for examples of agent configurations and more. The setup creates plenty of examples to get you started.
 
+# Talkpile Studio
+
+## Build
+
+```sh
+npm run studio:clean
+npm run studio:tauri build
+```
+
+## Develop
+
+```sh
+npm run studio:tauri dev
+```
+
 # License
 
 Apache-2.0

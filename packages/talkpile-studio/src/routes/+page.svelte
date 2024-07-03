@@ -1,5 +1,6 @@
 <script>
   import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
 
   let name = "";
   let greetMsg = "";
@@ -8,6 +9,11 @@
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     greetMsg = await invoke("greet", { name });
   }
+
+  onMount(() => {
+      invoke('close_splashscreen')
+  });
+
 </script>
 
 <div class="container">

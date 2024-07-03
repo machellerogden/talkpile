@@ -19,7 +19,9 @@
         "test": "node test/runner.mjs | tap-diff",
         "test-ugly": "node test/runner.mjs",
         "lint": "prettier --check . && eslint .",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "studio:clean": "npm run -w talkpile-studio clean",
+        "studio:tauri": "npm run -w talkpile-studio tauri"
     },
     "devDependencies": {
         "@types/eslint": "^8.56.0",
@@ -84,6 +86,6 @@
         "zod": "^3.23.8"
     },
     "workspaces": [
-        "packages/talkpile-ui"
+        "packages/talkpile-studio"
     ]
 }

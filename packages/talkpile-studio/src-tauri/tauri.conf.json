@@ -1,7 +1,7 @@
 {
-  "productName": "talkpile",
+  "productName": "talkpile-studio",
   "version": "0.0.0",
-  "identifier": "com.talkpile.ai",
+  "identifier": "ai.talkpile.studio",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",

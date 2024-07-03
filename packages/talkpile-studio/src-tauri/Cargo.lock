@@ -2977,7 +2977,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "talkpile-ui"
+name = "talkpile-studio"
 version = "0.0.0"
 dependencies = [
  "serde",
