@@ -19,11 +19,8 @@
 import process from 'node:process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-
 import ora from 'ora';
 import { default as enquirer } from 'enquirer';
-
-
 import { talkpileConfigSchema } from '../lib/schema.js';
 import { loadYamlFileSync } from '../lib/yaml.js';
 import { CONFIG_FILENAME, getUserConfigPath, __package_root } from '../lib/config.js';
@@ -35,7 +32,6 @@ const talkpileDir = path.resolve(path.dirname(talkpileFile), path.parse(CONFIG_F
 const agentsFile = path.resolve(talkpileDir, 'agents.yml');
 const agentsDir = path.resolve(talkpileDir, 'agents');
 const starterAgentsDir = path.resolve(__package_root, 'etc/setup/.talkpile/agents');
-
 
 const configPaths = [
     talkpileFile,

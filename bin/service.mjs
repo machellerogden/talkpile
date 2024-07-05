@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-import net from 'node:net';
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
@@ -30,15 +29,13 @@ import { packageAgents, packageDelegates, getTools } from '../lib/ai/index.js';
 import { editor } from '../lib/connection.js';
 import { nanoid } from 'nanoid';
 import jsonrpc from 'jsonrpc-lite';
+import { WebSocketServer } from 'ws';
 
 export function send(connection, method, params) {
     const id = nanoid(8);
     const data = jsonrpc.request(id, method, params);
     const json = JSON.stringify(data);
-    const success = connection.write(`${json}\n`);
-    if (!success) {
-        console.error('Failed to write to connection');
-    }
+    connection.send(`${json}\n`);
     return data;
 }
 
@@ -59,9 +56,9 @@ export async function prompt(connection, method, params) {
     let received;
     try {
         received = await new Promise((resolve, reject) => {
-            const handler = async (buf) => {
-                const str = buf.toString();
-                const chars = str.split('');
+            const handler = async (message) => {
+                message = message.toString();
+                const chars = message.split('');
                 for (let i = 0; i < chars.length; i++) {
                     incoming += chars[i];
                     if (chars[i - 1] == '\\' && chars[i] == '"') continue;
@@ -88,7 +85,7 @@ export async function prompt(connection, method, params) {
                     }
                 }
             };
-            connection.on('data', handler);
+            connection.on('message', handler);
             connection.on('error', reject);
         });
     } catch (e) {
@@ -114,8 +111,9 @@ async function main(env = process.env, args = process.argv.slice(2)) {
 
     const printPrompt = printDefaultPrompt;
 
-    server = net.createServer(
-        async function handleConnection(connection) {
+    server = new WebSocketServer({ port: config.port });
+
+    server.on('connection', async function handleConnection(connection) {
 
             let clientId = nanoid(8);
 
@@ -331,7 +329,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
 
                 );
 
-                connection.on('end', () => {
+                connection.on('close', () => {
                     clients.delete(clientId);
                     console.log(
                         printPrompt(),
@@ -355,9 +353,7 @@ async function main(env = process.env, args = process.argv.slice(2)) {
         throw err;
     });
 
-    server.listen(config.port, () => {
-        console.log(printPrompt(), printPrefix('info', COLOR.info), `Listening on`, server.address().port);
-    });
+    console.log(printPrompt(), printPrefix('info', COLOR.info), `Listening on`, server.address().port);
 
 }
 

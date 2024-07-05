@@ -9,7 +9,7 @@ Talkpile is set of tools for hosting your own "always available" team of persona
 
 - [ ] Backfill tests
 - [x] JSON-RPC
-- [ ] WebSockets
+- [x] WebSockets
 - [ ] Web Interface
 - [ ] ai provider abstraction
     - providers to implement:

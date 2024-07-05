@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-import net from 'node:net';
 import os from 'node:os';
 import { realpathSync } from 'node:fs';
 import { argv, env, stdin, stdout, cwd } from 'node:process';
@@ -25,6 +24,7 @@ import * as readline from 'node:readline';
 import { editAsync } from 'external-editor';
 import { getClientConfig } from '../lib/config.js';
 import jsonrpc from 'jsonrpc-lite';
+import WebSocket from 'ws';
 
 const { EOL } = os;
 const exitController = new AbortController();
@@ -85,7 +85,7 @@ async function main(env = env, args = argv.slice(2)) {
 
     const { host, port } = config;
 
-    const socket = net.createConnection({ host, port });
+    const socket = new WebSocket(`ws://${host}:${port}`);
 
     let incoming = '';
     let depth = 0;
@@ -93,12 +93,16 @@ async function main(env = env, args = argv.slice(2)) {
     let rpcId;
 
     const reply = (message, state = 'success') =>
-        socket.write(`${JSON.stringify(jsonrpc[state](rpcId, message))}\r\n`);
+        socket.send(`${JSON.stringify(jsonrpc[state](rpcId, message))}\r\n`);
 
-    socket.on('data', async buf => {
+    socket.on('open', () => {
+        console.log('connected to service');
+    });
 
-        const str = buf.toString();
-        const chars = str.split('');
+    socket.on('message', async message => {
+
+        message = message.toString();
+        const chars = message.split('');
 
         for (let i = 0; i < chars.length; i++) {
             incoming += chars[i];
@@ -177,7 +181,10 @@ async function main(env = env, args = argv.slice(2)) {
             }
         }
 
-    }).on('end', () => {
+    });
+
+    socket.on('close', () => {
+        console.log('disconnected from service');
         process.exit(0);
     });
 
