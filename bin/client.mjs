@@ -171,6 +171,11 @@ async function main(env = env, args = argv.slice(2)) {
                         reply(input);
                         break;
 
+                    case 'get-user-confirm':
+                        stdout.write((rpc.params.message ?? '') + EOL);
+                        rl.prompt(true);
+                        break;
+
                     default:
                         console.log('wat?', rpc);
                         rl.prompt(true);

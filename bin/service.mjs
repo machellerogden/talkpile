@@ -50,8 +50,8 @@ function tryParseNull(json) {
     }
 }
 
-export async function prompt(connection, method, params) {
-    const request = params ? send(connection, method, params) : send(connection, method);
+export async function prompt(connection, method, message) {
+    const request = message ? send(connection, method, { message }) : send(connection, method);
 
     let received;
 
@@ -176,8 +176,8 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                         return send(session.connection, 'print-chunk', { chunk });
                     },
 
-                    'confirm': async (session, question, error) => {
-                        const answer = await prompt(session.connection, question + ' (y/n)');
+                    'get-user-confirm': async (session, q, error) => {
+                        const answer = await prompt(session.connection, 'get-user-confirm', q + ' (y/n)');
                         const confirm = answer.trim().toLowerCase() === 'y';
 
                         if (!confirm) return error;
@@ -293,9 +293,9 @@ async function main(env = process.env, args = process.argv.slice(2)) {
                         }
 
                         if (tool.handler?.confirm) {
-                            const errorMessage = await replFx.confirm(
+                            const errorMessage = await replFx['get-user-confirm'](
                                 session,
-                                `Allow ${agent.designation} to run ${toolName} with the following input?\n${inspect(args[0])}?`,
+                                `Allow ${agent.designation} to run ${toolName} with the following input?\n${inspect(toolArgs)}?`,
                                 `I have declined your request to use ${toolName}. This is not an error. Ask me why.`
                             );
 
