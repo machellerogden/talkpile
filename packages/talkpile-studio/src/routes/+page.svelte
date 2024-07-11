@@ -1,49 +1,55 @@
 <script>
     import "../app.css";
 
-    import ChatHeader from '../components/ChatHeader.svelte';
-    import ChatWindow from '../components/ChatWindow.svelte';
-    import ChatInput from '../components/ChatInput.svelte';
-    import MockListing from '../components/MockListing.svelte';
-    import MockLLMSettings from '../components/MockLLMSettings.svelte';
+    import ComponentGrid from '../components/ComponentGrid.svelte';
+    import Terminal from '../components/Terminal.svelte';
 
-    let messages = [
-        { sender: 'Alice', message: 'Hello!', timestamp: '10:00 AM' },
-        { sender: 'Bob', message: 'Hi Alice!', timestamp: '10:02 AM' },
-        // More messages...
-    ];
+    import { keyboardShortcut } from '../stores/ui.js';
 
-    function sendMessage(newMessage) {
-        messages = [
-            ...messages,
-            { sender: 'You', message: newMessage, timestamp: new Date().toLocaleTimeString() }
-        ];
+    $: console.log('keyboardShortcut', $keyboardShortcut);
+
+    let components = [];
+
+    const maxColumns = 5;
+    const minColumns = 1;
+
+    function addComponent(component, props) {
+        components = [ ...components, { component, props } ];
     }
+
+    async function handleNewTerminal() {
+      addComponent(Terminal, { title: 'Example Terminal', port: 9394 });
+      columns = Math.min(columns + 1, maxColumns);
+    }
+
+    let columns = 0;
+
 </script>
 
-<div class="bg-slate-900 flex flex-col items-center justify-center min-h-screen p-4">
-    <div class="flex flex-row gap-4 w-full">
-        <div class="hidden lg:block flex-2">
-            <MockListing />
-        </div>
-        <div class="chat-container flex flex-col flex-1 rounded-4xl overflow-hidden shadow-lg bg-slate-800">
-            <ChatHeader title="Chat" />
-            <div class="flex-1 overflow-hidden flex flex-col">
-                <ChatWindow {messages} class="flex-1" />
-            </div>
-            <div class="sticky bottom-0 w-full">
-                <ChatInput {sendMessage} />
-            </div>
-        </div>
-        <div class="hidden lg:block flex-2">
-            <MockLLMSettings />
+<div class="w-full h-screen min-h-screen flex flex-col bg-slate-900">
+
+    <div class="flex-1 text-white">
+        <ComponentGrid {components} {columns} />
+    </div>
+
+    <div class="flex justify-between p-4">
+        <label for="columns" class="block flex flex-row gap-4 text-neon-blue">
+            <input
+                type="range"
+                min="0" max="5" step="1"
+                bind:value={columns}
+                class="bg-slate-800 text-neon-blue p-1 px-2 rounded-lg"
+            />
+            <span class="block pt-1">{columns}</span>
+        </label>
+        <div class="flex flex-col justify-center">
+          <button
+              on:click={handleNewTerminal}
+              class="bg-neon-green text-slate-900 py-1 px-3 rounded-lg hover:bg-neon-green-dark"
+          >
+              <span>New Terminal</span>
+          </button>
         </div>
     </div>
-</div>
 
-<style>
-    .chat-container {
-        height: 90vh;
-        max-height: 90vh;
-    }
-</style>
+</div>
