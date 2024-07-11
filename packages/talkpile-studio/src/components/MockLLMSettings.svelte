@@ -2,7 +2,7 @@
   // This component will just display a mock form for configuring LLM model settings for now.
 </script>
 
-<div class="mock-llm-settings bg-slate-800 p-4 rounded-4xl shadow-lg">
+<div class="mock-llm-settings bg-slate-800 p-4 rounded-lg shadow-lg">
   <h3 class="text-lg font-semibold text-neon-green font-sleek mb-4">LLM Model Settings</h3>
   <form class="text-neon-blue">
     <div class="mb-4">
